@@ -1,0 +1,2672 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#181818">
+<meta name="color-scheme" content="only light">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ปังจนพัง™</title>
+<style>
+:root{
+  --pink:#FF2DAA;--acid:#D7FF00;--blue:#245BFF;--paper:#FFFFFF;--ink:#181818;
+  /* Keep poster and flag colors intact when browsers enable Auto Dark Theme. */
+  color-scheme:only light;
+  --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);
+  --sal:env(safe-area-inset-left,0px);--sar:env(safe-area-inset-right,0px);
+  --font:"Noto Sans Thai","Sukhumvit Set","Thonburi","Leelawadee UI","Loma","Tahoma",system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{position:fixed;inset:0;overflow:hidden;background:var(--paper);color:var(--ink);font-family:var(--font);
+  overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  -webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
+.col{position:fixed;left:0;right:0;margin:0 auto;width:100%;max-width:480px;
+  padding-left:calc(12px + var(--sal));padding-right:calc(12px + var(--sar))}
+.off{visibility:hidden;opacity:0}
+.hidden{display:none!important}
+.card{background:var(--paper);border:3px solid var(--ink);border-radius:12px;box-shadow:3px 3px 0 var(--ink)}
+
+/* ---------- HUD ---------- */
+#hud{top:0;z-index:5;padding-top:calc(var(--sat) + 12px);display:flex;align-items:flex-start;gap:8px;pointer-events:none;transition:opacity .2s}
+#scoreCard{padding:5px 10px 4px;min-width:0;flex:0 1 112px}
+#score{font-size:30px;font-weight:900;line-height:1.05;font-variant-numeric:tabular-nums;letter-spacing:-.5px;white-space:nowrap}
+#bestHud{font-size:14px;font-weight:700;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#hudMid{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:4px;min-width:62px}
+#battery{display:flex;align-items:center;gap:3px;padding:4px 6px 4px 5px;border:3px solid var(--ink);border-radius:9px;background:var(--paper);position:relative}
+#battery::after{content:"";position:absolute;right:-7px;top:9px;width:4px;height:10px;background:var(--ink);border-radius:0 2px 2px 0}
+#battery i{display:block;width:13px;height:18px;border-radius:3px;border:2px solid var(--ink);background:transparent}
+#battery i.on{background:var(--acid)}
+#battery.low i.on{background:var(--pink)}
+#battery.hit{animation:shakeX .35s}
+#streak{font-size:18px;font-weight:900;padding:2px 10px;border:3px solid var(--ink);border-radius:999px;background:var(--pink);color:var(--ink);white-space:nowrap;transform:rotate(-3deg);transition:transform .12s}
+#streak.pop{transform:rotate(-3deg) scale(1.18)}
+#nextCard{position:relative;width:84px;flex:0 0 84px;padding:9px 3px 3px;display:flex;flex-direction:column;align-items:center;gap:1px}
+#nextCard .tag{position:absolute;top:-10px;left:50%;transform:translateX(-50%) rotate(-3deg);background:var(--ink);color:var(--acid);font-size:12px;font-weight:900;line-height:1.5;padding:0 7px;border-radius:6px;white-space:nowrap}
+#nextCv{width:74px;height:26px;display:block}
+#nextName{font-size:15px;font-weight:900;line-height:1.2;max-width:78px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{pointer-events:auto}
+@keyframes shakeX{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* ---------- event banner ---------- */
+#evb{z-index:6;top:calc(var(--sat) + 90px);pointer-events:none;display:flex;justify-content:center;transition:opacity .2s,transform .2s}
+#evb .evcard{display:flex;align-items:center;gap:10px;padding:6px 10px;max-width:100%;background:var(--acid);border:3px solid var(--ink);border-radius:12px;box-shadow:3px 3px 0 var(--ink);transform:rotate(-1deg)}
+#evb.active .evcard{background:var(--pink)}
+#evb .evico{width:30px;height:30px;flex:0 0 30px;display:grid;place-items:center;background:var(--ink);border-radius:50%}
+#evb .evico svg{width:20px;height:20px}
+#evb b{display:block;font-size:18px;font-weight:900;line-height:1.15}
+#evb small{display:block;font-size:14px;font-weight:700;line-height:1.2}
+#evb .evcount{font-size:22px;font-weight:900;min-width:32px;height:32px;border-radius:8px;background:var(--ink);color:var(--paper);display:grid;place-items:center;padding:0 6px}
+#evb.flash .evcard{animation:pulse .5s ease-in-out 3}
+@keyframes pulse{50%{transform:rotate(-1deg) scale(1.06)}}
+
+/* ---------- joke notifications (fake phone push from fictional apps) ---------- */
+#notif{z-index:6;bottom:calc(var(--sab) + 92px);pointer-events:none;display:flex;justify-content:center;transition:opacity .2s,transform .25s cubic-bezier(.2,1.3,.4,1)}
+#notif.hide{opacity:0;transform:translateY(16px)}
+#notif .nc{display:flex;align-items:center;gap:10px;width:100%;max-width:420px;background:var(--paper);border:3px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink);padding:6px 12px 6px 7px}
+#notifIco{width:36px;height:36px;flex:0 0 36px;display:block}
+#notif .nt{min-width:0;flex:1 1 auto}
+#notif .nh{display:flex;justify-content:space-between;gap:8px;font-size:13px;font-weight:800;line-height:1.25;opacity:.62}
+#notifMsg{font-size:16px;font-weight:800;line-height:1.25}
+
+/* ---------- bottom control pad ---------- */
+#pad{z-index:5;bottom:0;padding-bottom:calc(var(--sab) + 10px);pointer-events:none;transition:opacity .2s}
+.padbar{height:72px;border-radius:18px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 12px 0 10px;box-shadow:0 -3px 0 rgba(24,24,24,.12)}
+.skipBox{display:flex;align-items:center;gap:6px;padding:6px 0;border-radius:12px;transition:background .1s;flex:0 0 auto}
+.skipBox.holding{background:var(--acid);color:var(--ink)}
+.skipBox.denied{animation:shakeX .3s}
+.pips{display:flex;gap:5px}
+.pips i{width:18px;height:18px;border-radius:50%;border:2.5px solid var(--paper);display:block;background:transparent}
+.skipBox.holding .pips i{border-color:var(--ink)}
+.pips i.on{background:var(--pink)}
+.skipTxt{font-size:16px;font-weight:800;line-height:1.15;white-space:nowrap}
+.skipTxt small{display:block;font-size:13px;font-weight:700;opacity:1}
+.tapHint{font-size:18px;font-weight:900;color:var(--acid);white-space:nowrap;text-align:right;line-height:1.2}
+.tapHint span{display:block;color:var(--paper);font-weight:700}
+#fxRow{display:flex;flex-wrap:wrap;justify-content:flex-end;align-content:center;gap:4px;min-width:0}
+#fxRow:empty{display:none}
+.fx{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 4px 0 9px;border-radius:999px;border:2px solid var(--paper);font-size:15px;font-weight:900;white-space:nowrap}
+.fx i{font-style:normal;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:var(--ink);color:var(--paper);font-size:13px;display:grid;place-items:center}
+
+/* ---------- tutorial ---------- */
+#tut{z-index:7;top:calc(var(--sat) + 92px);display:flex;justify-content:center;pointer-events:none;transition:opacity .25s}
+#tut .bubble{display:flex;align-items:center;gap:12px;background:var(--paper);border:3px solid var(--ink);border-radius:14px;box-shadow:4px 4px 0 var(--ink);padding:8px 14px 8px 10px;font-size:19px;font-weight:900;line-height:1.3;max-width:100%}
+#tut .bubble small{display:block;font-size:15px;font-weight:700;opacity:.8}
+#tut .finger{flex:0 0 40px;width:40px;height:40px;animation:tapAnim .9s ease-in-out infinite}
+#tut.hold .finger{animation:holdAnim 1.4s ease-in-out infinite}
+@keyframes tapAnim{0%,100%{transform:scale(1)}40%{transform:scale(.72)}}
+@keyframes holdAnim{0%{transform:scale(1)}15%,85%{transform:scale(.72)}100%{transform:scale(1)}}
+
+/* ---------- buttons ---------- */
+.btn{font-family:inherit;font-weight:900;font-size:21px;line-height:1.1;min-height:56px;padding:0 16px;border:3px solid var(--ink);border-radius:16px;
+  background:var(--paper);color:var(--ink);box-shadow:4px 4px 0 var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  touch-action:manipulation;transition:transform .06s,box-shadow .06s;-webkit-appearance:none;appearance:none}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.btn:focus-visible{outline:4px solid var(--blue);outline-offset:2px}
+.btn.big{min-height:64px;font-size:26px;width:100%}
+.btn.pink{background:var(--pink)}
+.btn.acid{background:var(--acid)}
+.btn.blue{background:var(--blue);color:var(--paper)}
+.btn.sq{width:56px;height:56px;padding:0;flex:0 0 56px}
+.btn.sq svg{width:28px;height:28px}
+.btn .ico{width:22px;height:22px;flex:0 0 22px}
+.btn[disabled]{opacity:.55}
+.row{display:flex;gap:10px;width:100%}
+.row .btn{flex:1 1 auto;min-width:0}
+.volrow{display:flex;align-items:center;gap:12px;width:100%}
+input[type=range]{-webkit-appearance:none;appearance:none;flex:1 1 auto;min-width:0;height:56px;background:transparent;touch-action:none}
+input[type=range]::-webkit-slider-runnable-track{height:12px;border-radius:8px;background:var(--ink)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:32px;height:32px;margin-top:-10px;border-radius:50%;background:var(--acid);border:3px solid var(--ink)}
+input[type=range]::-moz-range-track{height:12px;border-radius:8px;background:var(--ink)}
+input[type=range]::-moz-range-thumb{width:28px;height:28px;border-radius:50%;background:var(--acid);border:3px solid var(--ink)}
+
+/* ---------- language flags ---------- */
+.flags{display:flex;gap:8px;flex:0 0 auto}
+.flagBtn{font-family:inherit;min-height:56px;min-width:62px;padding:0 10px;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border:3px solid var(--ink);border-radius:14px;background:var(--paper);color:var(--ink);box-shadow:3px 3px 0 var(--ink);font-size:17px;font-weight:900;
+  cursor:pointer;touch-action:manipulation;-webkit-appearance:none;appearance:none;transition:transform .06s,box-shadow .06s,background .1s}
+.flagBtn svg{width:36px;height:24px;display:block;border-radius:4px;box-shadow:0 0 0 2px var(--ink);flex:0 0 36px;filter:none;opacity:1}
+.flagBtn span{display:none;white-space:nowrap}
+.flags.big .flagBtn span{display:inline}
+.flagBtn[aria-pressed="true"]{background:var(--acid);transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.flagBtn:focus-visible{outline:4px solid var(--blue);outline-offset:2px}
+
+/* ---------- screens ---------- */
+.screen{position:fixed;inset:0;z-index:20;display:flex;justify-content:center;
+  padding:calc(var(--sat) + 14px) calc(14px + var(--sar)) calc(var(--sab) + 14px) calc(14px + var(--sal))}
+.wrap{width:100%;max-width:440px;height:100%;display:flex;flex-direction:column;gap:10px;min-height:0}
+.dim{background:rgba(24,24,24,.6)}
+.sheet{background:var(--paper);border:3px solid var(--ink);border-radius:20px;box-shadow:6px 6px 0 var(--ink);padding:18px 16px;height:auto;max-height:100%;margin:auto 0;gap:12px;overflow-y:auto;touch-action:pan-y}
+.sheet > *{flex-shrink:0}
+.sheet h2{font-size:30px;font-weight:900;line-height:1.1}
+.sheet p{font-size:18px;font-weight:700;opacity:.8}
+.stage{flex:1 1 auto;width:100%;min-height:60px;pointer-events:none}
+#menu .wrap > :not(.stage){flex-shrink:0}
+
+/* logo */
+.logoWrap{position:relative;text-align:center;width:100%}
+.logo{display:flex;align-items:center;justify-content:center;gap:8px;font-weight:900;line-height:1.35;white-space:nowrap}
+.logo .l1{color:var(--ink);text-shadow:4px 4px 0 var(--pink)}
+.logo .l2{background:var(--pink);color:var(--ink);border:4px solid var(--ink);border-radius:16px;box-shadow:5px 5px 0 var(--ink);
+  padding:0 12px;line-height:1.3;transform:rotate(-6deg);display:inline-block}
+.logo sup{font-size:.32em;vertical-align:top;margin-left:2px}
+body.en .logo{flex-direction:column;gap:6px;line-height:1.05;letter-spacing:-.5px}
+body.en .logo .l2{line-height:1.12;padding:3px 16px 0}
+.stk{display:inline-block;font-weight:900;border:3px solid var(--ink);border-radius:10px;box-shadow:3px 3px 0 var(--ink);padding:3px 10px;white-space:nowrap}
+.logoWrap .s1{position:absolute;left:2px;top:-20px;background:var(--acid);font-size:15px;transform:rotate(-7deg)}
+.logoWrap .s2{position:absolute;right:2px;bottom:-18px;background:var(--blue);color:var(--paper);font-size:15px;transform:rotate(5deg)}
+.tagline{font-size:21px;font-weight:900;background:var(--ink);color:var(--paper);padding:4px 12px;border-radius:8px;transform:rotate(-1.5deg);text-align:center}
+.note{font-size:14px;font-weight:700;opacity:.8;text-align:center}
+
+/* menu */
+#menu .wrap{align-items:center}
+#menu .logoWrap{margin-top:22px}
+#menu .logo{font-size:min(46px,11.5vw)}
+body.en #menu .logo{font-size:min(44px,11.5vw)}
+body.en #menu .logoWrap{margin-top:34px}
+body.en .logoWrap .s1{top:-32px}
+body.en .logoWrap .s2{bottom:-24px;right:-2px}
+#menu .tagline{margin-top:22px}
+#menuBest{font-size:17px;font-weight:800;background:var(--paper);padding:3px 12px;border-radius:999px;border:3px solid var(--ink);text-align:center}
+#menu .btn.big{font-size:30px;min-height:68px}
+.row2{display:flex;align-items:center;gap:12px;width:100%}
+
+/* results */
+#results{background:var(--paper)}
+#results .wrap{gap:8px;padding:8px 6px;overflow-y:auto;overflow-x:hidden;touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+#results .wrap::-webkit-scrollbar{display:none}
+#results .wrap > *{flex-shrink:0}
+.resTop{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.resTop .boom{background:var(--pink);font-size:28px;transform:rotate(-4deg);padding:2px 14px}
+#resNew{background:var(--acid);font-size:16px;transform:rotate(5deg)}
+#resCause{font-size:16px;font-weight:800;line-height:1.3;background:var(--ink);color:var(--paper);border-radius:10px;padding:6px 10px}
+#resCause b{color:var(--acid)}
+.resScore{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;border-bottom:3px solid var(--ink);padding-bottom:4px}
+.resScore > div:first-child{flex:1 1 0;min-width:0}
+.resScore small{display:block;font-size:15px;font-weight:800;opacity:.75}
+#resScore{font-size:58px;font-weight:900;line-height:1.05;letter-spacing:-1px;font-variant-numeric:tabular-nums;white-space:nowrap}
+#resBest{font-size:16px;font-weight:800;text-align:right;line-height:1.25;flex:0 0 32%;min-width:0;overflow-wrap:anywhere}
+.titleBadge{background:var(--blue);color:var(--paper);border:3px solid var(--ink);border-radius:14px;box-shadow:4px 4px 0 var(--ink);padding:8px 12px;transform:rotate(-1deg)}
+.titleBadge small{font-size:14px;font-weight:800;color:var(--acid);display:block}
+#resTitle{display:block;font-size:24px;font-weight:900;line-height:1.15}
+#resTitleSub{display:block;font-size:15px;font-weight:700;font-style:normal;opacity:1}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{border:3px solid var(--ink);border-radius:12px;padding:4px 10px;background:#fff;min-width:0}
+.stat small{display:block;font-size:13px;font-weight:800;opacity:.7}
+.stat b{display:block;font-size:22px;font-weight:900;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:30px}
+.chip{font-size:15px;font-weight:900;border:2.5px solid var(--ink);border-radius:999px;padding:2px 10px;background:var(--acid);max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.chip.new::after{content:" NEW";color:var(--pink)}
+.chip.ghost{background:transparent;font-weight:700;white-space:normal}
+#resTip{font-size:15px;font-weight:700;line-height:1.3;opacity:.85}
+.brand{font-size:13px;font-weight:800;opacity:.6;text-align:center}
+#results .actions{display:flex;flex-direction:column;gap:10px;margin-top:auto;padding:10px 0 8px;position:sticky;bottom:-8px;z-index:1;background:var(--paper);box-shadow:0 -8px 12px var(--paper)}
+#results .row .btn{font-size:19px;padding:0 10px}
+
+/* book */
+#bookList{display:flex;flex:1 1 auto;flex-direction:column;gap:6px;overflow:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch;min-height:0;max-height:64vh}
+#bookList .bk{flex-shrink:0}
+.bk{border:3px solid var(--ink);border-radius:12px;padding:5px 10px;background:#fff}
+.bk.lock{background:transparent;border-style:dashed}
+.bk b{font-size:17px;font-weight:900;display:block;line-height:1.2}
+.bk .rec{display:flex;flex-wrap:wrap;gap:4px;margin:3px 0}
+.bk .rec span{font-size:14px;font-weight:800;border:2px solid var(--ink);border-radius:6px;padding:0 6px}
+.bk small{display:block;font-size:13px;font-weight:700;opacity:.8;line-height:1.3}
+.bookTabs{gap:6px;flex-shrink:0}
+.bookTabs .btn{min-height:44px;font-size:15px;padding:0 8px;box-shadow:none;border-width:2px;border-radius:10px}
+.bookTabs .btn[aria-pressed="true"]{background:var(--acid)}
+#bookSummary{font-size:14px;font-weight:800}
+.bk.earned{background:var(--acid)}
+.extremeBadge{display:inline-block;margin:4px 0;padding:2px 7px;border-radius:5px;background:var(--pink);color:var(--ink);font-size:11px;font-weight:900}
+.medalProgress{display:flex;align-items:center;gap:10px;margin-top:6px;font-size:13px;font-weight:800}
+.medalProgress progress{width:100%;height:10px;accent-color:var(--blue)}
+#resAchievements{font-size:14px;font-weight:800;line-height:1.35;color:var(--ink)}
+
+#toast{position:fixed;z-index:30;left:50%;top:calc(var(--sat) + 138px);transform:translateX(-50%);max-width:92vw;background:var(--ink);color:var(--paper);
+  font-size:16px;font-weight:800;padding:8px 14px;border-radius:12px;pointer-events:none;opacity:0;transition:opacity .25s;text-align:center}
+#toast.show{opacity:1}
+#rotate{position:fixed;inset:0;z-index:50;background:var(--ink);color:var(--paper);display:none;place-items:center;text-align:center;font-size:22px;font-weight:900;padding:20px}
+@media (orientation:landscape) and (max-height:500px){#rotate{display:grid}}
+@media (max-height:700px){
+  #resScore{font-size:48px}.titleBadge{padding:6px 10px}#resTitle{font-size:21px}.stat b{font-size:19px}
+  #menu .logo{font-size:min(40px,11vw)}#menu .tagline{margin-top:18px;font-size:19px}#resCause{font-size:15px}
+}
+@media (max-width:360px){
+  .flags.big .flagBtn span{display:none}
+  #hud{gap:6px}
+  #scoreCard{padding:5px 6px 4px}#score{font-size:26px}#bestHud{font-size:12px}
+  #nextCard{width:68px;flex-basis:68px}#nextCv{width:62px;height:22px}#nextName{font-size:13px;max-width:62px}
+  #btnPause{width:48px;flex-basis:48px}
+  .skipTxt{font-size:15px}.skipTxt small{font-size:12px}
+  #resNew{font-size:14px;padding:2px 8px}
+}
+@media (max-height:620px){
+  .stage{min-height:40px}
+  #menu .wrap{gap:8px}
+  #menu .logoWrap,body.en #menu .logoWrap{margin-top:26px}
+  body.en #menu .logo{font-size:30px}
+  #menu .logoWrap .s1{top:-24px;font-size:13px}#menu .logoWrap .s2{bottom:-18px;font-size:13px}
+  #menu .tagline{font-size:17px;margin-top:16px}#menuBest{font-size:14px}
+  #menu .btn.big{font-size:26px;min-height:60px}#btnBook{font-size:18px}
+}
+@media (prefers-reduced-motion:reduce){#tut .finger{animation:none}}
+/* A usable document preview remains visible until the first successful game frame. */
+#launchFallback{position:fixed;inset:0;z-index:100;background:var(--pink);color:var(--ink);display:flex;align-items:center;justify-content:center;padding:24px;overflow:auto;touch-action:pan-y}
+#launchFallback .launchCard{width:100%;max-width:440px;background:var(--paper);border:4px solid var(--ink);border-radius:24px;box-shadow:7px 7px 0 var(--ink);padding:28px 24px;text-align:center}
+#launchFallback .launchBadge{display:inline-block;padding:4px 12px;margin-bottom:18px;background:var(--acid);border:3px solid var(--ink);border-radius:10px;font-size:16px;font-weight:900;transform:rotate(-4deg)}
+#launchFallback h1{font-size:clamp(34px,10vw,52px);font-weight:900;line-height:1.3;margin-bottom:4px}
+#launchFallback .launchEnglish{font-size:18px;font-weight:800;margin-bottom:24px}
+#launchFallback p{font-size:19px;line-height:1.55;margin-bottom:20px}
+#launchFallback a{display:flex;min-height:64px;align-items:center;justify-content:center;background:var(--acid);border:3px solid var(--ink);border-radius:16px;box-shadow:4px 4px 0 var(--ink);color:var(--ink);font-size:24px;font-weight:900;text-decoration:none;padding:12px;touch-action:manipulation}
+#launchFallback a:focus-visible{outline:4px solid var(--blue);outline-offset:4px}
+#launchFallback small{display:block;font-size:15px;line-height:1.5;margin-top:20px;overflow-wrap:anywhere}
+
+/* Quiet controls leave the moving box as the visual focus. */
+.homeTop{width:100%;display:flex;align-items:center;justify-content:flex-end;min-height:44px}
+.btn.quiet{background:var(--paper);border:2px solid var(--ink);box-shadow:none;font-size:18px;min-height:44px}
+.btn.quiet:active{transform:scale(.97);box-shadow:none}
+.btn.sq.quiet{width:44px;height:44px;min-height:44px;flex:0 0 44px;border-color:transparent}
+#btnBook{width:100%}
+#menu .logoWrap,body.en #menu .logoWrap{margin-top:14px}
+.homeHint{font-size:15px;font-weight:700;line-height:1.4;text-align:center}
+#menuBest{background:transparent;border-radius:0;font-size:15px}
+.settingRow{display:flex;align-items:center;justify-content:space-between;font-size:18px;font-weight:800}
+#settings label,#pause label{font-size:16px;font-weight:800}
+.musicSelect{width:100%;min-height:48px;padding:8px 12px;border:3px solid var(--ink);border-radius:12px;background:var(--paper);color:var(--ink);font:800 16px var(--font);touch-action:manipulation}
+#hud .card{border-width:2px;box-shadow:none}
+#btnPause{width:48px;height:48px;min-height:48px;flex-basis:48px;border-width:2px;box-shadow:none}
+.riskHint{flex:1;min-width:0;text-align:right;line-height:1.2;color:var(--pink)}
+.riskHint b{display:block;font-size:14px}
+.riskHint small{display:block;font-size:12px;color:var(--paper)}
+#resDetails{font-size:16px;font-weight:800;border-top:1px solid var(--ink);padding-top:8px}
+#resDetails summary{cursor:pointer;min-height:44px;display:list-item;list-style-position:inside;padding:10px 0;touch-action:manipulation}
+.resultDetail{display:flex;flex-direction:column;gap:10px;padding-bottom:12px}
+#results .actions{margin-top:6px;position:static;box-shadow:none;padding:4px 0}
+#results .actions .row .btn{background:var(--paper);color:var(--ink);border-width:2px;box-shadow:none;font-size:17px}
+#results .titleBadge{border-width:2px;box-shadow:none}
+#btnMode{width:100%;font-size:16px;min-height:44px}
+.modeChoices{display:flex;flex-direction:column;gap:8px}
+.modeChoices .btn{min-height:52px;font-size:19px;box-shadow:none}
+.modeChoices .btn[aria-pressed="true"],#speedChoices .btn[aria-pressed="true"]{background:var(--acid)}
+#modeDescription{font-size:16px;line-height:1.4}
+#modeHud{font-size:12px;font-weight:900;line-height:1.4;border-radius:4px;background:var(--acid);color:var(--ink);padding:0 4px;white-space:nowrap;display:inline-block}
+#modeHud.urgent{background:var(--pink)}
+#modeHud.hidden{display:none}
+#resMode{font-size:14px;font-weight:800}
+#menu .wrap{overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain}
+@media(max-height:740px){#menu .stage{min-height:60px;max-height:180px}#menu .wrap{gap:7px}#menu .tagline{font-size:17px}#menu .btn.big{min-height:60px}}
+#about{border-top:2px solid var(--ink);padding-top:4px}
+#about summary{font-size:16px;font-weight:900;min-height:44px;padding:10px 0;cursor:pointer;touch-action:manipulation;list-style-position:inside}
+#aboutBuild{font-size:15px;font-weight:700;line-height:1.5;overflow-wrap:anywhere;padding:0 0 10px}
+</style>
+</head>
+<body>
+<section id="launchFallback" aria-label="เปิดเกมในเบราว์เซอร์">
+  <div class="launchCard">
+    <span class="launchBadge">เกมซ้อนชีวิต</span>
+    <h1>ปังจนพัง™</h1>
+    <div class="launchEnglish">Boom Till Bust™</div>
+    <p>หน้าพรีวิวไฟล์อาจแสดงเกมได้ไม่ครบ<br>เปิดลิงก์ด้านล่างใน Safari หรือ Chrome เพื่อเล่น</p>
+    <a href="https://pangjonpang-play.sathienwit-r.chatgpt.site" target="_blank" rel="noopener">เปิดเล่นเกม · Play</a>
+    <small>To play, open the game link in your browser.<br>https://pangjonpang-play.sathienwit-r.chatgpt.site</small>
+  </div>
+</section>
+<canvas id="cv" data-s-aria="aCanvas"></canvas>
+
+<!-- HUD -->
+<div id="hud" class="col off">
+  <div id="scoreCard" class="card"><div id="modeHud" class="hidden"></div><div id="score">0</div><div id="bestHud"></div></div>
+  <div id="hudMid">
+    <div id="battery"><i class="on"></i><i class="on"></i><i class="on"></i></div>
+    <div id="streak" class="off"></div>
+  </div>
+  <div id="nextCard" class="card"><span class="tag" data-s="next"></span><canvas id="nextCv" width="148" height="52"></canvas><b id="nextName"></b></div>
+  <button id="btnPause" class="btn sq iconbtn" data-s-aria="aPause">
+    <svg viewBox="0 0 24 24"><rect x="5" y="4" width="5" height="16" rx="1.5" fill="#181818"/><rect x="14" y="4" width="5" height="16" rx="1.5" fill="#181818"/></svg>
+  </button>
+</div>
+<div id="evb" class="col off"><div class="evcard"><span class="evico" id="evIco"></span><div><b id="evTitle"></b><small id="evSub"></small></div><span class="evcount" id="evCount">2</span></div></div>
+<div id="notif" class="col hide" aria-live="polite"><div class="nc"><canvas id="notifIco" width="72" height="72"></canvas><div class="nt"><div class="nh"><b id="notifApp"></b><span data-s="now"></span></div><div id="notifMsg"></div></div></div></div>
+<div id="pad" class="col off">
+  <div class="padbar">
+    <div class="skipBox" id="skipBox"><div class="pips" id="pips"><i></i><i></i><i></i></div><div class="skipTxt"><span data-s="holdNope"></span><small data-s="skipThis"></small></div></div>
+    <div id="fxRow"></div>
+    <div class="tapHint" id="tapHint" data-s-html="tapDrop"></div>
+    <div id="riskHint" class="riskHint hidden" role="status"><b id="riskText"></b><small data-s="riskGuide"></small></div>
+  </div>
+</div>
+<div id="tut" class="col off"><div class="bubble"><svg class="finger" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="#FF2DAA" stroke="#181818" stroke-width="3"/><circle cx="20" cy="20" r="6" fill="#FFFFFF"/></svg><span id="tutText"></span></div></div>
+
+<!-- HOME: one tap from opening to playing -->
+<section id="menu" class="screen">
+  <div class="wrap">
+    <div class="homeTop"><button id="btnSettings" class="btn sq quiet" data-s-aria="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="6" r="2.5" fill="white" stroke="currentColor" stroke-width="2"/><circle cx="15" cy="12" r="2.5" fill="white" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="18" r="2.5" fill="white" stroke="currentColor" stroke-width="2"/></svg></button></div>
+    <div class="logoWrap"><div class="logo"><span class="l1" data-s="logo1"></span><span class="l2"><span data-s="logo2"></span><sup>™</sup></span></div>
+      <span class="stk s1" data-s="stk1"></span><span class="stk s2" data-s="stk2"></span></div>
+    <div class="tagline" data-s="tagline"></div>
+    <div id="menuStage" class="stage"></div>
+    <div id="menuBest"></div>
+    <button id="btnMode" class="btn quiet"></button>
+    <button id="btnStart" class="btn big pink" data-s="start"></button>
+    <button id="btnBook" class="btn quiet"></button>
+    <div class="homeHint" data-s="homeHint"></div>
+    <div id="storeNote" class="note hidden" data-s="storeNote"></div>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<section id="results" class="screen hidden">
+  <div class="wrap">
+    <div class="resTop"><span id="resHeadline" class="stk boom" data-s="boom"></span><span id="resNew" class="stk hidden" data-s="newBest"></span></div>
+    <div id="resMode"></div>
+    <div id="resCause"></div>
+    <div class="resScore"><div><small data-s="score"></small><div id="resScore">0</div></div><div id="resBest"></div></div>
+    <div class="titleBadge"><small data-s="runTitle"></small><b id="resTitle"></b><i id="resTitleSub"></i></div>
+    <div id="resTip"></div>
+    <div id="resAchievements" class="hidden"></div>
+    <div class="actions">
+      <button id="btnRetry" class="btn big pink" data-s="retry"></button>
+      <div class="row"><button id="btnMenu" class="btn" data-s="menu"></button>
+        <button id="btnShare" class="btn blue"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 12v7h14v-7" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-s="share"></span></button>
+        <button id="btnSound2" class="btn sq" data-s-aria="aSound"></button></div>
+    </div>
+    <details id="resDetails"><summary data-s="details"></summary><div class="resultDetail"><div class="stats" id="resStats"></div><div class="chips" id="resCombos"></div></div></details>
+    <div class="brand" data-s="brand"></div>
+  </div>
+</section>
+
+<!-- GAME MODES -->
+<section id="modePicker" class="screen dim hidden" role="dialog" aria-modal="true" aria-labelledby="modeTitle">
+  <div class="wrap sheet">
+    <h2 id="modeTitle" data-s="modeTitle"></h2>
+    <div class="modeChoices" role="group" data-s-aria="modeTitle">
+      <button id="modeClassic" class="btn" data-s="modeClassic" aria-pressed="true"></button>
+      <button id="modeSpeed" class="btn" data-s="modeSpeed" aria-pressed="false"></button>
+      <button id="modeTimed" class="btn" data-s="modeTimed" aria-pressed="false"></button>
+    </div>
+    <div id="speedChoices" class="row hidden" role="group" data-s-aria="speedChoice">
+      <button id="speed1" class="btn" aria-pressed="true">1×</button><button id="speed2" class="btn" aria-pressed="false">2×</button><button id="speed3" class="btn" aria-pressed="false">3×</button>
+    </div>
+    <p id="modeDescription"></p>
+    <b id="modeBest"></b>
+    <button id="btnModeClose" class="btn big acid" data-s="modeDone"></button>
+  </div>
+</section>
+
+<!-- SETTINGS -->
+<section id="settings" class="screen dim hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+  <div class="wrap sheet">
+    <h2 id="settingsTitle" data-s="settings"></h2>
+    <label data-s="language"></label><div class="flags big" data-picker></div>
+    <label for="volMenu" data-s="sound"></label>
+    <div class="volrow"><button id="btnSound" class="btn sq" data-s-aria="aSound"></button><input id="volMenu" type="range" min="0" max="100" data-s-aria="aVolume"></div>
+    <label for="musicMenu" data-s="musicChoice"></label><select id="musicMenu" class="musicSelect"></select>
+    <div class="settingRow" id="hapticSetting"><span data-s="vibration"></span><button id="btnHaptic" class="btn sq" data-s-aria="aHaptic"></button></div>
+    <details id="about"><summary data-s="about"></summary><p id="aboutBuild">Built by JinJin version 0.02</p></details>
+    <button id="btnSettingsClose" class="btn big acid" data-s="close"></button>
+  </div>
+</section>
+
+<!-- PAUSE -->
+<section id="pause" class="screen dim hidden">
+  <div class="wrap sheet">
+    <h2 data-s="pauseTitle"></h2>
+    <p data-s="pauseSub"></p>
+    <button id="btnResume" class="btn big acid" data-s="resume"></button>
+    <div class="volrow"><button id="btnSound3" class="btn sq" data-s-aria="aSound"></button><input id="volPause" type="range" min="0" max="100" data-s-aria="aVolume"></div>
+    <label for="musicPause" data-s="musicChoice"></label><select id="musicPause" class="musicSelect"></select>
+    <div class="row"><button id="btnRestart" class="btn" data-s="restart"></button><button id="btnQuit" class="btn" data-s="menu"></button></div>
+    <div class="flags" data-picker></div>
+  </div>
+</section>
+
+<!-- COMBO BOOK -->
+<section id="book" class="screen dim hidden">
+  <div class="wrap sheet">
+    <h2 data-s="bookTitle"></h2>
+    <div class="row bookTabs" role="group" data-s-aria="collectionTabs">
+      <button id="tabCombos" class="btn" data-s="combosTab" aria-pressed="true"></button>
+      <button id="tabMedals" class="btn" data-s="medalsTab" aria-pressed="false"></button>
+      <button id="tabEvents" class="btn" data-s="eventsTab" aria-pressed="false"></button>
+    </div>
+    <div id="bookSummary"></div>
+    <div id="bookList"></div>
+    <button id="btnBookClose" class="btn big" data-s="close"></button>
+  </div>
+</section>
+
+<div id="toast"></div>
+<div id="rotate" data-s-html="rotate"></div>
+
+<script>
+(() => {
+'use strict';
+/* =====================================================================
+   ปังจนพัง™ / Boom Till Bust™ — single-file game · 0.02 · JinJin
+   Sections: 0 utils · 1 i18n · 2 content · 3 store · 4 audio · 5 layout
+             6 game rules · 7 input · 8 render · 9 ui · 10 main loop
+   ===================================================================== */
+
+/* ---------- 0. UTILS ---------- */
+const C = {pink:'#FF2DAA', acid:'#D7FF00', blue:'#245BFF', paper:'#FFFFFF', ink:'#181818', gold:'#FFC83D'};
+const FONT = '"Noto Sans Thai","Sukhumvit Set","Thonburi","Leelawadee UI","Loma","Tahoma",system-ui,sans-serif';
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+const rand = (a, b) => a + Math.random() * (b - a);
+const rint = (a, b) => Math.floor(rand(a, b + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const $ = id => document.getElementById(id);
+const fmt = n => Math.round(n).toLocaleString('en-US');
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'}[ch]));
+const nw = t => '<span style="white-space:nowrap">' + t + '</span>';
+function rr(c, x, y, w, h, r) {
+  r = Math.max(0, Math.min(r, w / 2, h / 2));
+  c.beginPath(); c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+}
+function srand(seed) { let t = (seed * 2654435761) >>> 0; return () => { t += 0x6D2B79F5; let r = Math.imul(t ^ (t >>> 15), 1 | t); r ^= r + Math.imul(r ^ (r >>> 7), 61 | r); return ((r ^ (r >>> 14)) >>> 0) / 4294967296; }; }
+function rot(x, y, cx, cy, a) { const s = Math.sin(a), k = Math.cos(a), dx = x - cx, dy = y - cy; return [cx + dx * k - dy * s, cy + dx * s + dy * k]; }
+
+/* ---------- 1. I18N — UI strings (S) and bilingual content values (tx) ---------- */
+let LANG = 'th';
+const STR = {
+  th: {
+    docTitle:'ปังจนพัง™', logo1:'ปังจน', logo2:'พัง', stk1:'เกมซ้อนชีวิต', stk2:'ห้ามล้ม (มั้ง)',
+    modeTitle:'เลือกโหมดชีวิต', modeClassic:'ชีวิตปกติ', modeSpeed:'Speed run', modeTimed:'จับเวลาชีวิต · 3 นาที', speedChoice:'ความเร็วกล่อง', modeDone:'ใช้โหมดนี้',
+    classicDesc:'ซ้อนต่อไปได้เรื่อย ๆ จนกว่าชีวิตจะพัง', speedDesc:'กล่องเคลื่อนที่เร็วขึ้น 1×–3× · ไม่เพิ่มตัวคูณคะแนน', timedDesc:'เร่งทำคะแนนและอยู่รอดให้ครบ 3 นาที · พักเกมหรือสลับแอปแล้วเวลาหยุด',
+    timeUp:'ครบเวลา!', timedCause:'อยู่รอดครบ 3 นาที!', timedTip:'เวลาหมด แต่ชีวิตยังไปต่อ · ตาหน้าทำสถิติใหม่', timeLeft:t => `เหลือ ${t}`, modeRecord:n => `สถิติโหมดนี้ ${n}`, modeLabel:(name, factor) => name + (factor ? ' · ' + factor + '×' : ''),
+    about:'เกี่ยวกับ', settings:'ตั้งค่า', language:'ภาษา', sound:'เสียง', musicChoice:'เพลงประกอบ', musicAuto:'สลับอัตโนมัติ', vibration:'การสั่น', details:'ดูรายละเอียดตานี้',
+    homeHint:'แตะเพื่อปล่อย · กดค้างเพื่อข้าม', riskGuide:'ดูเงาก่อนปล่อย', weakFloor:(n, side) => `ชั้น ${n} เอียง${side}`, crashAt:(n, side) => `ฐานชั้น ${n} รับน้ำหนักด้าน${side}ไม่ไหว`,
+    tagline:'ชีวิตต้องปัง แต่ฐานยังไม่แน่น', tapToStart:'แตะเพื่อเริ่ม', splashNote:'เปิดเสียงด้วยนะ · เพลงแต่งเอง 8 เพลง',
+    start:'เริ่มปัง', book:'สมุดสะสม', menuBest:(b, n, t) => `สถิติ ${b} · ค้นพบคอมโบ ${n}/${t}`,
+    combosTab:'คอมโบ', medalsTab:'เหรียญ', eventsTab:'เหตุการณ์', collectionTabs:'เลือกหมวดสมุดสะสม',
+    medalUnlocked:'Achievement ใหม่', medalProgress:(n,t) => `ปลดล็อก ${n}/${t}`, eventCollection:n => `${n} เหตุการณ์ · เตือนล่วงหน้า 2 กล่อง`,
+    protected:'กันวิกฤต', scamBox:'เสี่ยงโกง ×2', heavyBox:'หนักขึ้น', fastBox:'เร็ว +20%', marketBox:'คะแนน ÷2',
+    newMedals:n => `Achievement ใหม่ ${n} เหรียญ`,
+    storeNote:'บันทึกในเครื่องไม่ได้ (โหมดส่วนตัว?) — เล่นได้ แต่สถิติจะไม่ถูกจำ',
+    storeFail:'บันทึกในเครื่องไม่ได้ — เล่นต่อได้ แต่สถิติจะไม่ถูกจำ',
+    best:'สูงสุด', newBestHud:'สถิติใหม่!', next:'ถัดไป', combo:n => `คอมโบ ×${n}`,
+    holdNope:'ค้าง = ช่างแม่ง', skipThis:'ข้ามกล่องนี้', tapDrop:'แตะ <span>= ปล่อย</span>',
+    pauseTitle:'พักก่อนเพื่อน', pauseSub:'บริษัทเดินต่อได้ แม้คุณไปนอน', resume:'เล่นต่อ', restart:'เริ่มใหม่', menu:'เมนู',
+    bookTitle:'สมุดสะสมชีวิต', close:'ปิด', lockedName:n => `??? ${n} กล่อง`, hint:'คำใบ้: ',
+    boom:'พังแล้ว!', newBest:'สถิติใหม่!', score:'คะแนน', bestBlock:b => `สูงสุด<br><b>${b}</b>`, runTitle:'ฉายาประจำตา',
+    stTop:'ชั้นสูงสุด', stStreak:'คอมโบสูงสุด', stPerfect:'วางเป๊ะ', stSpent:'ใช้ชีวิตไปกับ', stNone:'ยังไม่ได้ใช้',
+    spent:(name, n, unit) => `${name} ${n} ${unit}`,
+    noCombo:'ตานี้ไม่มีคอมโบ', tryHint:h => ` · ลอง: ${h}`, found:(n, t) => `ค้นพบ ${n}/${t}`,
+    brand:'ปังจนพัง™ · ชีวิตต้องปัง แต่ฐานยังไม่แน่น', retry:'อีกตา ↻', share:'แชร์',
+    shareText:(t, s, h) => `ได้ฉายา “${t}” ใน ปังจนพัง™ — ${s} คะแนน · ชั้น ${h} #ปังจนพัง`, copied:'คัดลอกข้อความแล้ว ไปแปะได้เลย',
+    rotate:'หมุนจอเป็นแนวตั้งนะ<br>ชีวิตเอียงพอแล้ว',
+    causeBattery:'<b>แบตชีวิตหมด</b> — กล่องหลุดจากหอ 3 ครั้ง',
+    tipBattery:'ทริค: เงาใต้กล่องขึ้น "หลุด!" = อย่าเพิ่งปล่อย · "พัก+พัก" ชาร์จแบตได้',
+    causeTopple:(f, side, heavy) => `ฐาน<b>${nw('ชั้น ' + f)}</b> รับน้ำหนักฝั่ง<b>${side}</b>ไม่ไหว` + (heavy ? ' ' + nw(`(ตัวหนัก: ${heavy})`) : ''),
+    left:'ซ้าย', right:'ขวา',
+    tipTopple:o => `ทริค: เงาขึ้น "ล้ม!" = อย่าเพิ่งปล่อย · หอเอียงให้วางสวนไปฝั่ง${o} · "ค่าเช่า+ค่าเช่า" ล็อกฐานได้`,
+    ground:'ฐานชีวิต · ห้ามหวั่นไหว', miss:'หลุด!', topple:'ล้ม!', trendZone:'เทรนด์ ×3', nope:'ช่างแม่ง…', noQuota:'โควตาหมด',
+    onTrend:'ตามเทรนด์!', saved:'กู้หอ! +40', richMoney:'+฿999,999 (ทิพย์)', richStab:'ความมั่นคง +0%', plusBattery:'+1 แบตชีวิต',
+    loanOk:'อนุมัติ! ฐานล็อกแล้ว', nopeFloat:'ช่างแม่ง!', crashTitle:'พัง!', crashBattery:'แบตชีวิตหมด', crashTopple:'หอเอียงจนรับไม่ไหว',
+    heightBonus:'+100 โบนัสความสูง', floorDefault:n => `ชั้น ${n}: ยังไม่ถึงฝั่งฝัน`, today:n => `วันนี้: ${n}`, newCombo:'คอมโบใหม่!',
+    evIn:n => `อีก ${n} กล่อง: `, denied:'โควตาช่างแม่งหมด — วางให้สำเร็จเพื่อชาร์จ', now:'เมื่อกี้',
+    fx:{ot:'OT', qq:'ช้า', viral:'×2', jitter:'×3', guard:'กันวิกฤต'},
+    aSound:'เปิด/ปิดเสียง', aVolume:'ระดับเสียง', aHaptic:'เปิด/ปิดการสั่น', aPause:'พักเกม', battery:n => `แบตชีวิต ${n}/3`,
+    aCanvas:'พื้นที่เล่นเกม แตะเพื่อปล่อยกล่อง กดค้างเพื่อข้าม',
+  },
+  en: {
+    docTitle:'Boom Till Bust™', logo1:'BOOM TILL', logo2:'BUST', stk1:'a life-stacking game', stk2:'do not fall (maybe)',
+    modeTitle:'Choose your life mode', modeClassic:'Classic life', modeSpeed:'Speed run', modeTimed:'Life timer · 3 minutes', speedChoice:'Box speed', modeDone:'Use this mode',
+    classicDesc:'Keep stacking until life falls apart', speedDesc:'Boxes move 1×–3× faster · no score multiplier', timedDesc:'Score fast and survive 3 minutes · pausing or leaving the app stops the clock',
+    timeUp:'TIME UP!', timedCause:'Survived all 3 minutes!', timedTip:'Time is up. Life goes on. Beat this score next run.', timeLeft:t => `${t} left`, modeRecord:n => `Mode best ${n}`, modeLabel:(name, factor) => name + (factor ? ' · ' + factor + '×' : ''),
+    about:'About', settings:'Settings', language:'Language', sound:'Sound', musicChoice:'Music', musicAuto:'Automatic mix', vibration:'Vibration', details:'Run details',
+    homeHint:'Tap to drop · Hold to skip', riskGuide:'Check the landing shadow', weakFloor:(n, side) => `Floor ${n} leans ${side}`, crashAt:(n, side) => `Floor ${n}: too much weight on the ${side}`,
+    tagline:'Peak life. Weak base.', tapToStart:'TAP TO START', splashNote:'Sound on · 8 original tracks inside',
+    start:'START BOOMING', book:'Collection', menuBest:(b, n, t) => `Best ${b} · Combos ${n}/${t}`,
+    combosTab:'Combos', medalsTab:'Medals', eventsTab:'Events', collectionTabs:'Collection categories',
+    medalUnlocked:'Achievement unlocked', medalProgress:(n,t) => `Unlocked ${n}/${t}`, eventCollection:n => `${n} events · 2-box advance warning`,
+    protected:'Crisis shield', scamBox:'Scam risk ×2', heavyBox:'Extra weight', fastBox:'Speed +20%', marketBox:'Score ÷2',
+    newMedals:n => `${n} new achievements`,
+    storeNote:"Can't save on this device (private mode?) — play on, but records won't stick",
+    storeFail:"Can't save on this device — play on, but records won't stick",
+    best:'Best', newBestHud:'New best!', next:'NEXT', combo:n => `Combo ×${n}`,
+    holdNope:'Hold = Nope', skipThis:'skip this box', tapDrop:'Tap <span>= drop</span>',
+    pauseTitle:'Take a break, bestie', pauseSub:'The company survives your nap.', resume:'Resume', restart:'Restart', menu:'Menu',
+    bookTitle:'Life Collection', close:'Close', lockedName:n => `??? ${n} boxes`, hint:'Hint: ',
+    boom:'BUSTED!', newBest:'New best!', score:'Score', bestBlock:b => `Best<br><b>${b}</b>`, runTitle:"This run's title",
+    stTop:'Top floor', stStreak:'Best combo', stPerfect:'Perfect', stSpent:'Life spent on', stNone:'nothing yet',
+    spent:(name, n) => `${name} ×${n}`,
+    noCombo:'No combos this run', tryHint:h => ` · Try: ${h}`, found:(n, t) => `Found ${n}/${t}`,
+    brand:'Boom Till Bust™ · Peak life. Weak base.', retry:'One more ↻', share:'Share',
+    shareText:(t, s, h) => `I got “${t}” in Boom Till Bust™ — ${s} pts · floor ${h} #BoomTillBust`, copied:'Copied — paste it anywhere',
+    rotate:'Turn your phone upright<br>Life is tilted enough',
+    causeBattery:'<b>Life battery empty</b> — 3 boxes slipped off',
+    tipBattery:'Tip: shadow says "MISS!" = don\'t drop yet · "Rest+Rest" recharges the battery',
+    causeTopple:(f, side, heavy) => `<b>${nw('Floor ' + f)}</b> couldn't hold the weight on the <b>${side}</b>` + (heavy ? ' ' + nw(`(heaviest: ${heavy})`) : ''),
+    left:'left', right:'right',
+    tipTopple:o => `Tip: shadow says "TOPPLE!" = don't drop yet · leaning? drop toward the ${o} · "Rent+Rent" locks the base`,
+    ground:'LIFE FOUNDATION · DO NOT WOBBLE', miss:'MISS!', topple:'TOPPLE!', trendZone:'TREND ×3', nope:'Nope…', noQuota:'No Nopes left',
+    onTrend:'On trend!', saved:'Saved! +40', richMoney:'+$999,999 (imaginary)', richStab:'Stability +0%', plusBattery:'+1 battery',
+    loanOk:'Approved! Base locked', nopeFloat:'Nope!', crashTitle:'BUST!', crashBattery:'Life battery empty', crashTopple:'Leaned past the point of no return',
+    heightBonus:'+100 height bonus', floorDefault:n => `Floor ${n}: dream still loading`, today:n => `Today: ${n}`, newCombo:'New combo!',
+    evIn:n => `In ${n}: `, denied:'Out of Nopes — land boxes to recharge', now:'now',
+    fx:{ot:'OT', qq:'Slow', viral:'×2', jitter:'×3', guard:'Shield'},
+    aSound:'Sound on/off', aVolume:'Volume', aHaptic:'Vibration on/off', aPause:'Pause game', battery:n => `Life battery ${n}/3`,
+    aCanvas:'Game area. Tap to drop a box, hold to skip it.',
+  },
+};
+function S(k, ...a) { const d = STR[LANG], v = (k in d) ? d[k] : STR.th[k]; return typeof v === 'function' ? v(...a) : v; }
+const tx = v => (v && typeof v === 'object' && !Array.isArray(v) && ('th' in v)) ? ((LANG in v) ? v[LANG] : v.th) : v;
+
+/* ---------- 2. CONTENT (box types, apps, combos, events, quips, songs) ---------- */
+const TYPES = {
+  work:   {name:{th:'งาน', en:'Work'}, w:136, h:46, m:1.2, r:6, fill:C.blue, badge:C.paper, ico:'brief', icoCol:C.blue, lab:C.paper, pat:'lines', unit:'ชิ้น',
+           quips:{th:['เราเป็นครอบครัวเดียวกัน','ด่วนนะ แต่ไม่รีบ','งานนี้ได้ exposure นะน้อง','KPI ใหม่: ยิ้มให้มากขึ้น','ตอบไลน์หลังสามทุ่ม = วัฒนธรรมองค์กร'],
+                  en:["We're a family here","Urgent, but no rush","It's great exposure, though","New KPI: smile more","Replying at 11pm = company culture"]}},
+  coffee: {name:{th:'กาแฟ', en:'Coffee'}, w:100, h:44, m:0.7, r:9, fill:C.acid, badge:C.ink, ico:'cup', icoCol:C.acid, lab:C.ink, pat:null, unit:'แก้ว',
+           quips:{th:['นอนน้อย แต่ productive','แก้วที่ 3 ของเช้านี้','ไม่ได้ติดกาแฟ แค่ขาดไม่ได้','เลือดกรุ๊ปลาเต้'],
+                  en:['No sleep, very productive',"Cup #3 and it's not even 10am","Not addicted. Just can't stop.",'Blood type: iced latte']}},
+  rent:   {name:{th:'ค่าเช่า', en:'Rent'}, w:150, h:50, m:1.7, r:3, fill:C.ink, badge:C.acid, ico:'house', icoCol:C.ink, lab:C.acid, pat:'bricks', unit:'เดือน',
+           quips:{th:['วิวหลักล้าน เงินเหลือหลักสิบ','ห้อง 24 ตร.ม. แต่ใจกว้าง','ใกล้รถไฟฟ้า (เดิน 25 นาที)','เงินเดือนออก ค่าเช่ารับไปก่อน'],
+                  en:['Million-dollar view, two-digit savings','24 m², huge heart','Near the train (25-min walk)','Payday? The landlord got paid first']}},
+  likes:  {name:{th:'ยอดไลก์', en:'Likes'}, w:124, h:44, m:0.6, r:12, fill:C.pink, badge:C.paper, ico:'heart', icoCol:C.pink, lab:C.ink, pat:null, unit:'โพสต์',
+           quips:{th:['มีคนรัก 8,000 คน ยังไม่มีคนหารค่าห้อง','ยอดวิวขึ้น ยอดเงินเฉย','ไลก์เยอะ แต่ไม่มีใครถามว่าโอเคมั้ย','อัลกอฯ รักเรา วันละ 3 ชั่วโมง'],
+                  en:['Loved by 8,000. Rent split by 0.','Views up, balance flat',"So many likes, nobody asked if I'm okay",'The algorithm loves me, 3 hours a day']}},
+  lux:    {name:{th:'ของแพง', en:'Splurge'}, w:98, h:42, m:1.4, r:4, fill:C.paper, badge:C.pink, ico:'gem', icoCol:C.paper, lab:C.ink, pat:'dots', unit:'ชิ้น',
+           quips:{th:['ลงทุนกับภาพลักษณ์','ผ่อน 0% 10 เดือน = ฟรี (มั้ง)','ซื้อเพราะเครียด เครียดเพราะซื้อ','ของมันต้องมี บัญชีมันต้องหมด'],
+                  en:['Investing in my image','0% for 10 months = basically free','Shopped because stressed, stressed because shopped','Must-have item, must-empty account']}},
+  rest:   {name:{th:'พัก', en:'Rest'}, w:160, h:44, m:0.8, r:16, fill:C.paper, badge:C.blue, ico:'moon', icoCol:C.paper, lab:C.ink, pat:'stripes', unit:'งีบ',
+           quips:{th:['วันนี้ตอบช้า เพราะมีชีวิต','ปิดแจ้งเตือนคือ self-care','งีบ 20 นาทีก็เป็น skill','Out of office (ทางใจ)'],
+                  en:['Replying late because I have a life','Muting notifications is self-care','A 20-minute nap is a skill','Out of office (emotionally)']}},
+  base:   {name:{th:'เงินเดือน', en:'Salary'}, w:210, h:40, m:1e9, r:4, fill:C.acid, badge:C.ink, ico:'baht', icoCol:C.acid, lab:C.ink, pat:'hazard'},
+};
+const PLAY_TYPES = ['work','coffee','rent','likes','lux','rest'];
+const BASE_W = {work:24, coffee:17, rent:12, likes:17, lux:11, rest:15};
+
+/* fictional apps that "push" the jokes — keeps jokes out of the timing lane */
+const APPS = {
+  work:    {name:{th:'HR บริษัทครอบครัว', en:'Family Corp HR'},       col:C.blue,  ico:'brief', icoCol:C.paper},
+  coffee:  {name:{th:'แอปนับการนอน',     en:'Sleep Tracker'},        col:C.acid,  ico:'cup',   icoCol:C.ink},
+  rent:    {name:{th:'แอปธนาคาร',         en:'Bank App'},             col:C.ink,   ico:'house', icoCol:C.acid},
+  likes:   {name:{th:'ฟีดฟาด',            en:'FeedFad'},              col:C.pink,  ico:'heart', icoCol:C.paper},
+  lux:     {name:{th:'ผ่อนง่าย Pay',       en:'PayLater+'},            col:C.paper, ico:'gem',   icoCol:C.pink},
+  rest:    {name:{th:'ปฏิทิน',             en:'Calendar'},             col:C.blue,  ico:'moon',  icoCol:C.paper},
+  gravity: {name:{th:'แรงโน้มถ่วง',        en:'Gravity'},              col:C.pink,  ico:'down',  icoCol:C.ink},
+  nope:    {name:{th:'ช่างแม่ง',           en:'Nope'},                 col:C.pink,  ico:'x',     icoCol:C.ink},
+  eng:     {name:{th:'วิศวกรโครงสร้าง',    en:'Structural Engineer'},  col:C.acid,  ico:'warn',  icoCol:C.ink},
+  algo:    {name:{th:'อัลกอฯ ฟีดฟาด',      en:'FeedFad Algorithm'},    col:C.ink,   ico:'spark', icoCol:C.acid},
+};
+
+const COMBOS = [
+  {id:'ot', name:{th:'OT Deluxe', en:'OT Deluxe'}, seq:['coffee','work','work'], col:C.blue, bonus:150,
+   joke:{th:'สุขภาพพัง แต่ KPI ผ่าน', en:'Health: broken. KPI: passed.'},
+   effect:{th:'3 กล่องถัดไปเกาะแน่น วางเป๊ะง่ายขึ้น', en:'Next 3 boxes stick — perfects get easier'},
+   hint:{th:'กาแฟก่อน แล้วค่อยทำงาน... สองรอบ', en:'Coffee first, then work… twice'}},
+  {id:'rich', name:{th:'รวยทิพย์', en:'Fake Rich'}, seq:['likes','lux'], col:C.gold, bonus:500,
+   joke:{th:'ทองฟุ้งเต็มจอ ความมั่นคงเท่าเดิม', en:'Gold everywhere. Stability unchanged.'},
+   effect:{th:'+500 คะแนนทิพย์ (หอไม่ได้แน่นขึ้นนะ)', en:'+500 imaginary points (tower not any safer)'},
+   hint:{th:'ไลก์มา ของแพงไป', en:'Likes, then something pricey'}},
+  {id:'qq', name:{th:'Quiet Quitting', en:'Quiet Quitting'}, seq:['rest','rest'], col:C.blue, bonus:80,
+   joke:{th:'บริษัทเดินต่อได้ แม้คุณไปนอน', en:'The company runs fine while you nap'},
+   effect:{th:'ทุกอย่างช้าลง 4 กล่อง + ชาร์จแบตชีวิต 1 ขีด', en:'Everything slows for 4 boxes + 1 battery'},
+   hint:{th:'พักแล้ว... พักต่อ', en:'Rest… then rest some more'}},
+  {id:'loan', name:{th:'ผ่อนจนมั่นคง', en:'Mortgage Mode'}, seq:['rent','rent'], col:C.ink, bonus:200,
+   joke:{th:'ผ่อนอีก 30 ปี แต่ฐานแน่นนะ', en:'30 more years to pay, but the base is solid'},
+   effect:{th:'ล็อกฐานหอทั้งหมดด้านล่าง ไม่ล้มตรงนั้นอีก', en:"Locks the tower below — it can't fall there anymore"},
+   hint:{th:'จ่ายค่าเช่าซ้อนกันสองเดือน', en:'Pay rent two months in a row'}},
+  {id:'viral', name:{th:'ไวรัลข้ามคืน', en:'Overnight Viral'}, seq:['likes','likes','likes'], col:C.pink, bonus:300,
+   joke:{th:'ดังข้ามคืน ลืมข้ามวัน', en:'Famous overnight, forgotten by lunch'},
+   effect:{th:'คะแนน ×2 อีก 5 กล่อง', en:'Score ×2 for 5 boxes'},
+   hint:{th:'ไลก์ ไลก์ ไลก์', en:'Like, like, like'}},
+  {id:'wlb', name:{th:'Work-Life Balance', en:'Work-Life Balance'}, seq:['work','rest','work'], col:C.acid, bonus:250,
+   joke:{th:'บาลานซ์ได้ 1 วันต่อปี', en:'Balanced: one day per year'},
+   effect:{th:'+1 แบตชีวิต +1 ช่างแม่ง', en:'+1 battery, +1 Nope'},
+   hint:{th:'งาน คั่นด้วยพัก แล้วงาน', en:'Work, a break, then work'}},
+  {id:'jitter', name:{th:'ใจสั่นแต่ส่งทัน', en:'Jittery but Shipped'}, seq:['coffee','coffee','coffee'], col:C.pink, bonus:120,
+   joke:{th:'หัวใจ 140 BPM แต่ deadline ไม่รอ', en:'Heart at 140 BPM, deadline unmoved'},
+   effect:{th:'เร็วขึ้น 4 กล่อง แต่คะแนน ×3', en:'Faster for 4 boxes, but score ×3'},
+   hint:{th:'กาแฟสามแก้วติด', en:'Three coffees in a row'}},
+  {id:'sidegig', name:{th:'เลิกงานแล้วทำงาน', en:'Side Hustle'}, seq:['work','coffee','work'], col:C.blue, bonus:220, grants:{skips:1},
+   joke:{th:'รายได้เสริม งานหลักคือไม่ได้นอน', en:'Extra income. Sleep sold separately.'},
+   effect:{th:'+220 คะแนน +1 ช่างแม่ง', en:'+220 points, +1 Nope'}, hint:{th:'ทำงาน เติมกาแฟ แล้วทำต่อ', en:'Work, coffee, more work'}},
+  {id:'buffer', name:{th:'พักเพื่อรอด', en:'Recovery Buffer'}, seq:['rest','work','rest'], col:C.blue, bonus:180, grants:{battery:1, qq:3},
+   joke:{th:'ไม่ได้ขี้เกียจ กำลังซ่อมระบบ', en:'Not lazy. System maintenance.'},
+   effect:{th:'+1 แบตชีวิต กล่องช้าลง 3 กล่อง', en:'+1 battery, slower for 3 boxes'}, hint:{th:'พักก่อนงาน พักหลังงาน', en:'Rest before and after work'}},
+  {id:'budget', name:{th:'งบสิ้นเดือน', en:'Month-End Budget'}, seq:['rent','work','rest'], col:C.acid, bonus:240, grants:{skips:2},
+   joke:{th:'เงินหมด แต่สิทธิ์ปฏิเสธยังเหลือ', en:'No cash left. Still allowed to say no.'},
+   effect:{th:'+240 คะแนน +2 ช่างแม่ง (สูงสุด 3)', en:'+240 points, +2 Nopes (max 3)'}, hint:{th:'จ่ายค่าเช่า ทำงาน แล้วพัก', en:'Rent, work, then rest'}},
+  {id:'detox', name:{th:'ปิดฟีด เปิดชีวิต', en:'Digital Detox'}, seq:['likes','rest','rest'], col:C.pink, bonus:210, grants:{battery:1, qq:4},
+   joke:{th:'อัลกอริทึมไม่รัก แต่ตัวเองรัก', en:'The algorithm can wait.'},
+   effect:{th:'+1 แบตชีวิต กล่องช้าลง 4 กล่อง', en:'+1 battery, slower for 4 boxes'}, hint:{th:'ไลก์ครั้งสุดท้าย แล้วพักยาว', en:'One last like, then two rests'}},
+  {id:'frugal', name:{th:'ซื้อแล้วรับผิดชอบ', en:'Buy Now, Work Later'}, seq:['lux','work','rent'], col:C.ink, bonus:280, grants:{ot:3},
+   joke:{th:'ของมันต้องมี งานมันต้องทำ', en:'Must-have item. Must-do overtime.'},
+   effect:{th:'กาวช่วยวางเป๊ะ 3 กล่อง', en:'Perfect-placement glue for 3 boxes'}, hint:{th:'ซื้อของแพง ทำงาน จ่ายค่าเช่า', en:'Splurge, work, pay rent'}},
+  {id:'hedge', name:{th:'กันชนชีวิต', en:'Life Hedge'}, seq:['rent','rest','work'], col:C.acid, bonus:260, grants:{guard:4},
+   joke:{th:'โลกวุ่นวาย เรามีแผนสำรอง', en:'The world spirals. We have a buffer.'},
+   effect:{th:'กันผลเสียจาก 4 วิกฤตใหม่ อีก 4 กล่อง', en:'Blocks new crisis penalties for 4 boxes'}, hint:{th:'จัดค่าบ้าน พัก แล้วทำงาน', en:'Rent, rest, work'}},
+  {id:'factcheck', name:{th:'เช็กก่อนเชื่อ', en:'Fact Check'}, seq:['likes','work','rest'], col:C.blue, bonus:260, grants:{guard:4},
+   joke:{th:'ผลตอบแทนดีเกินจริง ก็อย่าเพิ่งโอน', en:'Too good to be true? Keep your money.'},
+   effect:{th:'กันผลเสียจาก 4 วิกฤตใหม่ อีก 4 กล่อง', en:'Blocks new crisis penalties for 4 boxes'}, hint:{th:'เห็นไลก์ หาข้อมูล แล้วพักคิด', en:'Likes, do the work, pause to think'}},
+  {id:'rebuild', name:{th:'เริ่มใหม่แบบมีสติ', en:'Rebuild Routine'}, seq:['work','rest','coffee','work'], col:C.acid, bonus:400, grants:{battery:1, skips:1},
+   joke:{th:'ยังไม่รวย แต่ยังไม่พัง', en:'Not rich yet. Not broken either.'},
+   effect:{th:'+400 คะแนน +1 แบตชีวิต +1 ช่างแม่ง', en:'+400 points, +1 battery, +1 Nope'}, hint:{th:'งาน พัก กาแฟ แล้วกลับไปงาน', en:'Work, rest, coffee, work again'}},
+  {id:'diamond', name:{th:'มือเพชร เงินกระดาษ', en:'Diamond Hands'}, seq:['lux','rest','work','lux'], col:C.gold, bonus:650, grants:{gold:2},
+   joke:{th:'ถือยาวจนลืมรหัสแอป', en:'Held so long, forgot the password.'},
+   effect:{th:'+650 คะแนน ไม่มีการรับประกันฐาน', en:'+650 points. Stability not guaranteed.'}, hint:{th:'ของแพง พัก ทำงาน แล้วของแพงอีก', en:'Splurge, rest, work, splurge again'}},
+];
+const COMBO_BY = Object.fromEntries(COMBOS.map(c => [c.id, c]));
+
+const EV_ICONS = {
+  rent:'<svg viewBox="0 0 24 24"><path d="M2 12 12 3l10 9h-3v9H5v-9z" fill="#D7FF00"/></svg>',
+  trend:'<svg viewBox="0 0 24 24"><path d="M3 18l6-6 4 4 8-8" stroke="#FF2DAA" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 7h6v6" stroke="#FF2DAA" stroke-width="3.2" fill="none" stroke-linecap="round"/></svg>',
+  meeting:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="#FFFFFF" stroke-width="3" fill="none"/><path d="M12 7v5l4 2" stroke="#D7FF00" stroke-width="3" fill="none" stroke-linecap="round"/></svg>',
+  payday:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#FFC83D"/><text x="12" y="17" font-size="13" font-weight="900" text-anchor="middle" fill="#181818">฿</text></svg>',
+  interest:'<svg viewBox="0 0 24 24"><path d="M4 18 11 11l4 4 5-10M14 5h6v6" fill="none" stroke="#D7FF00" stroke-width="3" stroke-linejoin="round"/><circle cx="6" cy="6" r="2" fill="#FFFFFF"/></svg>',
+  war:'<svg viewBox="0 0 24 24"><path d="M12 2 22 21H2z" fill="#FF2DAA"/><path d="M12 8v6m0 3v1" stroke="#181818" stroke-width="3"/></svg>',
+  market:'<svg viewBox="0 0 24 24"><path d="m3 5 6 6 4-4 8 12m-7 0h7v-7" stroke="#FF2DAA" stroke-width="3" fill="none" stroke-linejoin="round"/></svg>',
+  scam:'<svg viewBox="0 0 24 24"><path d="M12 2 21 6v6c0 5-9 10-9 10S3 17 3 12V6z" fill="#D7FF00"/><path d="m8 8 8 8m0-8-8 8" stroke="#181818" stroke-width="3"/></svg>',
+};
+const EVENTS = {
+  rent:    {id:'rent', w:3, len:2, title:{th:'ค่าเช่าขึ้น!', en:'Rent hike!'},
+            sub:{th:'หนักขึ้น 30% · ช่างแม่งได้', en:'30% heavier · Nope is allowed'}, act:{th:'ค่าเช่าใหม่ หนักกว่าเดิม', en:'New rent, extra heavy'}},
+  trend:   {id:'trend', w:3, len:3, title:{th:'เทรนด์ใหม่บน ฟีดฟาด', en:'New trend on FeedFad'},
+            sub:{th:'โซนชมพู ×3 (แต่หอเอียง)', en:'pink zone ×3 (tower tilts)'}, act:{th:'ตามเทรนด์ = ×3 เสี่ยงเอียง', en:'Follow the trend = ×3, risky'}},
+  meeting: {id:'meeting', w:3, len:3, title:{th:'ประชุมด่วน!', en:'Urgent meeting!'},
+            sub:{th:'กล่องวิ่งไวขึ้น · เป๊ะ +50', en:'boxes speed up · perfect +50'}, act:{th:'ประชุมที่ควรเป็นอีเมล รีบ!', en:'Could have been an email. Hurry!'}},
+  payday:  {id:'payday', w:1.5, len:3, title:{th:'เงินเดือนออก', en:'Payday!'},
+            sub:{th:'คะแนน ×2 ก่อนเงินหมด', en:"score ×2 before it's gone"}, act:{th:'×2 รีบใช้ก่อนหมด', en:'×2 — spend it fast'}},
+  interest:{id:'interest', w:2, len:4, title:{th:'ดอกเบี้ยขึ้น!', en:'Interest rates up!'},
+            sub:{th:'ค่าเช่า/ของแพงหนัก +45% · วางกลางหรือข้าม', en:'Rent/splurges +45% mass · center or skip'}, act:{th:'หนี้หนักขึ้น · ค่าเช่า/ของแพง +45%', en:'Debt load: rent/splurges +45% mass'}},
+  war:     {id:'war', w:1.5, len:4, title:{th:'สงครามปะทุ!', en:'War breaks out!'},
+            sub:{th:'กล่องเร็ว +20% · งาน/กาแฟหนัก +35%', en:'Boxes +20% speed · work/coffee +35% mass'}, act:{th:'พลังงานแพง · เร็ว +20% งาน/กาแฟหนักขึ้น', en:'Energy shock: +20% speed, heavier work/coffee'}},
+  market:  {id:'market', w:2, len:4, title:{th:'หุ้นตกทั้งกระดาน!', en:'Market sell-off!'},
+            sub:{th:'ไลก์/ของแพงคะแนน ÷2 · วางเป๊ะ +30', en:'Likes/splurges score ÷2 · perfect +30'}, act:{th:'คะแนนไลก์/ของแพง ÷2 · เป๊ะช่วยได้ +30', en:'Likes/splurges ÷2 · perfect earns +30'}},
+  scam:    {id:'scam', w:2, len:3, title:{th:'กำไรทิพย์ โอนจริง!', en:'Fake gains, real transfer!'},
+            sub:{th:'ไลก์/ของแพงหนัก ×2 · ข้ามกล่องเสี่ยง +40', en:'Likes/splurges mass ×2 · skip them for +40'}, act:{th:'อย่าเพิ่งโอน · ข้ามไลก์/ของแพงได้ +40', en:'Think before paying: skip likes/splurges +40'}},
+};
+const CRISIS_IDS = ['interest','war','market','scam'];
+const ACHIEVEMENTS = [
+  {id:'first', metric:'height', target:1, name:{th:'ก้าวแรกของหนี้',en:'First Step'}, desc:{th:'วางสำเร็จ 1 กล่อง',en:'Land your first box'}},
+  {id:'floor10', metric:'height', target:10, name:{th:'พ้นโปรแล้วมั้ง',en:'Probation Passed?'}, desc:{th:'ขึ้นถึงชั้น 10',en:'Reach floor 10'}},
+  {id:'floor25', metric:'height', target:25, name:{th:'วิวดี หนี้สูง',en:'High-Rise Life'}, desc:{th:'ขึ้นถึงชั้น 25',en:'Reach floor 25'}},
+  {id:'floor50', metric:'height', target:50, name:{th:'สูงกว่าเงินเดือน',en:'Sky-High Salary?'}, desc:{th:'ขึ้นถึงชั้น 50',en:'Reach floor 50'}},
+  {id:'score1k', metric:'score', target:1000, name:{th:'พันแรกไม่ใช่เงิน',en:'First Thousand'}, desc:{th:'ทำคะแนน 1,000 ในหนึ่งตา',en:'Score 1,000 in one run'}},
+  {id:'score5k', metric:'score', target:5000, name:{th:'เศรษฐีคะแนน',en:'Five Thousand Club'}, desc:{th:'ทำคะแนน 5,000 ในหนึ่งตา',en:'Score 5,000 in one run'}},
+  {id:'steady5', metric:'streak', target:5, name:{th:'นิ่งกว่าแจ้งเตือน',en:'Steady Hands'}, desc:{th:'วางเป๊ะติดกัน 5 ครั้ง',en:'5 consecutive perfects'}},
+  {id:'steady10', metric:'streak', target:10, name:{th:'มือทอง สมองไม่พัก',en:'Golden Hands'}, desc:{th:'วางเป๊ะติดกัน 10 ครั้ง',en:'10 consecutive perfects'}},
+  {id:'perfect20', metric:'perfect', target:20, name:{th:'QC ไม่ต้องตรวจ',en:'Quality Control'}, desc:{th:'วางเป๊ะรวม 20 ครั้งในหนึ่งตา',en:'20 perfects in one run'}},
+  {id:'recovery', metric:'recover', target:1, name:{th:'กู้หอไม่กู้เงิน',en:'Tower Rescue'}, desc:{th:'ถ่วงดุลจนความเสี่ยงลดลงสำเร็จ 1 ครั้ง',en:'Recover a leaning tower once'}},
+  {id:'nope5', metric:'skips', target:5, name:{th:'ปฏิเสธเป็นก็รอด',en:'Boundaries'}, desc:{th:'ข้าม 5 กล่องในหนึ่งตา',en:'Skip 5 boxes in one run'}},
+  {id:'combo1', metric:'combos', target:1, name:{th:'ชีวิตมีสูตร',en:'Found a Formula'}, desc:{th:'ค้นพบคอมโบแรก',en:'Discover your first combo'}},
+  {id:'combo8', metric:'combos', target:8, name:{th:'นักปรุงชีวิต',en:'Life Mixologist'}, desc:{th:'ค้นพบคอมโบ 8 แบบ',en:'Discover 8 combos'}},
+  {id:'combo16', metric:'combos', target:16, name:{th:'สารานุกรมช่างแม่ง',en:'Combo Completionist'}, desc:{th:'ค้นพบคอมโบครบ 16 แบบ',en:'Discover all 16 combos'}},
+  {id:'runs10', metric:'runs', target:10, name:{th:'อีกตาเดียวสิบรอบ',en:'One More, Ten Times'}, desc:{th:'เล่นจนจบ 10 ตา',en:'Finish 10 runs'}},
+  {id:'rateSurvivor', metric:'interest', target:1, name:{th:'ดอกขึ้น ใจไม่ตก',en:'Rate-Hike Survivor'}, desc:{th:'ผ่านดอกเบี้ยขึ้นจนจบเหตุการณ์',en:'Finish an interest-rate event'}},
+  {id:'warSurvivor', metric:'war', target:1, name:{th:'รอดวิกฤตพลังงาน',en:'Energy-Shock Survivor'}, desc:{th:'ผ่านสงครามจนจบเหตุการณ์',en:'Finish a war event'}},
+  {id:'marketSurvivor', metric:'market', target:1, name:{th:'แดงทั้งจอ ยังไปต่อ',en:'Bear-Market Survivor'}, desc:{th:'ผ่านหุ้นตกจนจบเหตุการณ์',en:'Finish a market sell-off'}},
+  {id:'scamSurvivor', metric:'scam', target:1, name:{th:'ไม่เป็นเหยื่อฟีด',en:'Scam Survivor'}, desc:{th:'ผ่านกำไรทิพย์จนจบเหตุการณ์',en:'Finish a scam event'}},
+  {id:'allWeather', metric:'crises', target:4, name:{th:'โลกพัง หอยังอยู่',en:'All-Weather Life'}, desc:{th:'ผ่านวิกฤตใหม่ครบทั้ง 4 แบบ สะสมข้ามตาได้',en:'Survive all 4 crisis types across runs'}},
+  {id:'score1m', metric:'score', target:1000000, extreme:true, name:{th:'ล้านแรก แบงก์ไม่รับ',en:'A Million the Bank Won’t Take'}, desc:{th:'ทำคะแนน 1,000,000 ในหนึ่งตา',en:'Score 1,000,000 in one run'}},
+  {id:'floor200', metric:'height', target:200, extreme:true, name:{th:'ตึกสูงกว่างบประมาณ',en:'Above the Budget'}, desc:{th:'ขึ้นถึงชั้น 200 ในหนึ่งตา',en:'Reach floor 200 in one run'}},
+  {id:'steady50', metric:'streak', target:50, extreme:true, name:{th:'มือคน หรือบอต',en:'Human Hands or Bot?'}, desc:{th:'วางเป๊ะติดกัน 50 ครั้งในหนึ่งตา',en:'50 consecutive perfects in one run'}},
+  {id:'ironLife', metric:'ironLife', target:100, extreme:true, name:{th:'โลกพัง ฉันไม่พัง',en:'The World Breaks, I Don’t'}, desc:{th:'ถึงชั้น 100 และผ่านวิกฤตทั้ง 4 แบบในตาเดียว โดยไม่พลาดและไม่ใช้ข้าม',en:'Reach floor 100 and survive all 4 crisis types in one run, with zero misses and zero skips'}},
+  {id:'speed1Floor',metric:'speed1Height',target:25,name:{th:'สปีดแรก แค่เริ่มซ่า',en:'Speed Starter'},desc:{th:'ถึงชั้น 25 ใน Speed run 1×',en:'Reach floor 25 in Speed run 1×'}},
+  {id:'speed2Floor',metric:'speed2Height',target:50,name:{th:'ชีวิตติดเทอร์โบ',en:'Turbo Life'},desc:{th:'ถึงชั้น 50 ใน Speed run 2×',en:'Reach floor 50 in Speed run 2×'}},
+  {id:'speed3Floor',metric:'speed3Height',target:50,extreme:true,name:{th:'เร็วกว่าใจจะรับ',en:'Faster Than Feelings'},desc:{th:'ถึงชั้น 50 ใน Speed run 3×',en:'Reach floor 50 in Speed run 3×'}},
+  {id:'speed3Steady',metric:'speed3Streak',target:20,extreme:true,name:{th:'3× ยังเป๊ะ',en:'Triple-Speed Precision'},desc:{th:'เป๊ะติดกัน 20 ครั้งใน Speed run 3×',en:'20 consecutive perfects in Speed run 3×'}},
+  {id:'timedAlive',metric:'timedFinish',target:1,name:{th:'สามนาที ยังมีชีวิต',en:'Three Minutes Alive'},desc:{th:'อยู่ครบ 3 นาทีและวางอย่างน้อย 10 กล่องในโหมดจับเวลา',en:'Finish 3 minutes and land at least 10 boxes in Life timer'}},
+  {id:'timed10k',metric:'timedScore',target:10000,extreme:true,name:{th:'หมื่นแต้มในสามนาที',en:'Ten Thousand, Three Minutes'},desc:{th:'อยู่ครบ 3 นาทีและทำคะแนน 10,000 ในโหมดจับเวลา',en:'Finish the 3-minute timer with 10,000 points'}},
+  {id:'timedClean',metric:'timedClean',target:1,extreme:true,name:{th:'สามนาที ไม่หลุดมือ',en:'Three Minutes, No Slips'},desc:{th:'อยู่ครบ 3 นาที วางอย่างน้อย 30 กล่องและไม่พลาดเลย · ใช้ข้ามได้',en:'Finish 3 minutes with at least 30 boxes and zero misses · skips allowed'}},
+];
+const RECORD_KEYS = ['height','score','streak','perfect','recover','skips','ironLife','speed1Height','speed2Height','speed3Height','speed3Streak','timedFinish','timedScore','timedClean'];
+const MODE_IDS = ['classic','speed','timed'];
+const MODE_BEST_KEYS = ['classic','speed1','speed2','speed3','timed'];
+const THEMES = [
+  {id:'normal',  name:{th:'วันธรรมดา', en:'A regular day'},       sub:{th:'ไม่มีอะไรพิเศษ ยกเว้นทุกอย่าง', en:'Nothing special, except everything'}, w:{}},
+  {id:'monday',  name:{th:'วันจันทร์', en:'Monday'},               sub:{th:'งานกับกาแฟมาเป็นพิเศษ', en:'Extra work, extra coffee'}, w:{work:1.8, coffee:1.6, rest:0.6}},
+  {id:'eom',     name:{th:'สิ้นเดือน', en:'End of month'},          sub:{th:'ค่าเช่ามาเป็นแพ็ก', en:'Rent comes in bulk'}, w:{rent:2.1, lux:0.5}},
+  {id:'payday',  name:{th:'วันเงินเดือนออก', en:'Payday'},          sub:{th:'ของแพงเรียกชื่อคุณ', en:'Luxury is calling your name'}, w:{lux:2.3, likes:1.3}},
+  {id:'holiday', name:{th:'หยุดยาว', en:'Long weekend'},           sub:{th:'พักได้ แต่ไลน์กลุ่มงานยังเด้ง', en:'Rest allowed, work chat still pinging'}, w:{rest:2.3, work:0.7}},
+  {id:'viral',   name:{th:'สัปดาห์ไวรัล', en:'Viral week'},         sub:{th:'ทุกคนเป็นครีเอเตอร์', en:'Everyone is a creator now'}, w:{likes:2.3}},
+];
+const Q = {
+  miss:   {th:['ไถลเหมือนเงินเดือนปลายเดือน','หลุดแบบ deadline','ช่างมัน... อ้าว หล่นจริง','บางอย่างก็หลุดมือ เป็นปกติ'],
+           en:['Slipped like salary at month-end','Dropped like a deadline','Whatever… oh, it actually fell',"Some things slip. It's fine."]},
+  skip:   {th:['ช่างแม่ง!','seen แล้วไม่ตอบ','ขอปัดซ้าย','ไม่ใช่ปัญหาของวันนี้','เลื่อนไปชาติหน้า'],
+           en:['Nope!','Seen. No reply.','Swipe left',"Not today's problem",'Postponed to next life']},
+  danger: {th:['หอเริ่มเอียงเหมือนอารมณ์วันจันทร์','ฐานสั่นนิดหน่อย ไม่เป็นไร (เป็น)','เอียงขนาดนี้ ต้องวางสวนแล้วนะ'],
+           en:['Tilting like a Monday mood',"Base wobbling a bit. It's fine. (It's not.)",'This lean needs a counterweight']},
+  recover:{th:['กู้หอได้! ไม่ต้องรายงาน HR','ถ่วงดุลได้ เหมือนงบสิ้นเดือน','รอดแบบเฉียดฉิว'],
+           en:['Saved it! No need to tell HR','Balanced like a month-end budget','Survived by a hair']},
+  streak: {th:{3:'เป๊ะ!', 5:'มือนิ่งกว่าเงินเดือน', 8:'ตึงเกิ้น', 12:'อัลกอฯ เริ่มสนใจคุณแล้ว', 16:'HR อยากคุยด้วย', 20:'นี่คนหรือ AI'},
+           en:{3:'Perfect!', 5:'Steadier than your salary', 8:'Locked in', 12:'The algorithm noticed you', 16:'HR wants a word', 20:'Human or AI?'}},
+  floors: {th:{10:'ชั้น 10: ยังไม่ได้ขึ้นเงินเดือน', 20:'ชั้น 20: วิวดี ค่าส่วนกลางแพง', 30:'ชั้น 30: สูงจนเห็นอนาคต (ไม่ชัด)', 40:'ชั้น 40: ลมแรง แต่ใจแข็ง', 50:'ชั้น 50: นี่มันตึกหรือหนี้'},
+           en:{10:'Floor 10: still no raise', 20:'Floor 20: nice view, pricey fees', 30:'Floor 30: you can see the future (blurry)', 40:'Floor 40: strong winds, stronger will', 50:'Floor 50: is this a tower or a debt?'}},
+  crash:  {th:['ไม่ไหวแล้ว','ลาออก!','ใครก็ได้ช่วยที','ขอลาป่วย','งานด่วน!!'],
+           en:["I'm done",'I quit!','Help','Calling in sick','URGENT!!']},
+};
+const TUT = [
+  {t:{th:'แตะ 1 ครั้ง = ปล่อยกล่อง', en:'Tap once = drop the box'}, s:{th:'แตะตรงไหนก็ได้ ตอนกล่องอยู่เหนือหอ', en:'Tap anywhere while it hovers over the tower'}, hold:false},
+  {t:{th:'วางให้ตรงกลาง = เป๊ะ!', en:'Land it centered = Perfect!'}, s:{th:'ดูจุดสามเหลี่ยมให้ตรงกัน ได้คอมโบ', en:'Line up the little triangles to build combos'}, hold:false},
+  {t:{th:'เจอ "ค่าเช่า"? กดค้างไว้', en:'Got "Rent"? Press and hold'}, s:{th:'ค้าง = ช่างแม่ง ข้ามกล่องไปเลย', en:'Hold = Nope, skip it (uses 1 charge)'}, hold:true},
+  {t:{th:'โอเค! ซ้อนต่อเลย', en:'Nice! Keep stacking'}, s:{th:'หอเอียง → วางสวนฝั่งเพื่อถ่วงดุล', en:'Tower leaning → drop on the other side'}, hold:false},
+];
+const TUT_TYPES = ['coffee','work','rent','work'];
+
+/* Original songs — compact MIDI-style text, compiled to note events [step,note,len] per channel.
+   Lead/bass: 8 tokens per bar (8th notes). "." rest, "-" hold, "A/B" two 16ths. Drums: 16 steps per bar.
+   Form entries "A+" = same section plus arpeggio layer. */
+const SONG_DEFS = {
+  rich: { title:'เดี๋ยวก็รวย', bpm:96, swing:0.3,
+    inst:{lead:{w:'pulse25',v:0.15}, bass:{w:'triangle',v:0.32}, chord:{w:'square',v:0.035,style:'off'}, arp:{w:'pulse12',v:0.04,every:2}, drum:0.8},
+    sections:{
+      A:{chords:'C|Am|F|G',
+         lead:'E5 . G5 E5 C5 . D5 E5 | A5 - G5 . E5 . C5 . | F5 . A5 F5 C6 - A5 . | G5 . F5 E5 D5 . G4 .',
+         bass:'C3 . G2 . C3 C3 G2 . | A2 . E2 . A2 A2 E2 . | F2 . C3 . F2 F2 C3 . | G2 . D3 . G2 . B2 D3',
+         drums:{k:'x.......x.x.....', s:'....x.......x...', h:'..x...x...x...x.'}},
+      B:{chords:'F G|Em Am|Dm G|C G',
+         lead:'A5 A5 . C6 B5 . G5 . | G5 . E5 . A5 - - . | F5 E5 D5 . B4 . D5 . | C5 . . E5 G5 C6 - .',
+         bass:'F2 . C3 . G2 . D3 . | E2 . B2 . A2 . E3 . | D3 . A2 . G2 . B2 . | C3 . G2 . C3 . G2 .',
+         drums:{k:'x.....x.x.......', s:'....x.......x..x', h:'x.x.x.x.x.x.x.x.'}}},
+    form:['A','A+','B','B+'] },
+  corp: { title:'Corporate Family', bpm:112, swing:0,
+    inst:{lead:{w:'square',v:0.11}, bass:{w:'triangle',v:0.34}, chord:{w:'pulse25',v:0.04,style:'pulse'}, arp:{w:'pulse12',v:0.035,every:1}, drum:0.9},
+    sections:{
+      A:{chords:'Am|F|C|G',
+         lead:'A4 . C5 E5 A5 . G5 E5 | F5 . E5 C5 A4 - . . | G4 . C5 E5 G5 . E5 C5 | D5 - B4 . G4 . B4 D5',
+         bass:'A2 A2 A3 A2 A2 A2 A3 A2 | F2 F2 F3 F2 F2 F2 F3 F2 | C3 C3 C4 C3 C3 C3 C4 C3 | G2 G2 G3 G2 G2 G2 G3 G2',
+         drums:{k:'x...x...x...x...', s:'....x.......x...', h:'x.x.x.x.x.x.x.x.'}},
+      B:{chords:'Dm|Am|F|E',
+         lead:'F5 . F5 . E5 D5 . A4 | C5 . C5 . B4 A4 . E5 | A5 . G5 F5 E5 . C5 . | B4 - G#4 . E5 - . .',
+         bass:'D3 . D3 . D3 . A2 C3 | A2 . A2 . A2 . E2 G2 | F2 . F2 . F2 . C3 E3 | E2 . E2 . B2 . G#2 .',
+         drums:{k:'x...x...x...x.x.', s:'....x..x....x...', h:'xxxxxxxxxxxxxxxx'}}},
+    form:['A','A+','B','B+'] },
+  algo: { title:'Algorithm Loves You', bpm:128, swing:0,
+    inst:{lead:{w:'pulse12',v:0.13}, bass:{w:'square',v:0.1}, chord:{w:'triangle',v:0.06,style:'pad'}, arp:{w:'pulse25',v:0.04,every:1}, drum:1},
+    sections:{
+      A:{chords:'Em|C|G|D',
+         lead:'E5 G5 B5 G5 E5 G5 B5 E6 | C6 - B5 G5 E5 . G5 . | D6 B5 G5 B5 D6 . B5 . | A5 - F#5 . D5 . F#5 A5',
+         bass:'E2 E3 E2 E3 E2 E3 E2 E3 | C2 C3 C2 C3 C2 C3 C2 C3 | G2 G3 G2 G3 G2 G3 G2 G3 | D2 D3 D2 D3 D2 D3 D2 D3',
+         drums:{k:'x...x...x...x...', s:'....x.......x...', h:'..x...x...x...x.'}},
+      B:{chords:'C|D|Em|B',
+         lead:'G5 - - E5 G5 - A5 - | F#5 - - D5 A5 - - . | B5 - A5 G5 E5 - G5 - | F#5 - D#5 - B4 - - .',
+         bass:'C2 . C2 C3 . C2 C3 . | D2 . D2 D3 . D2 D3 . | E2 . E2 E3 . E2 E3 . | B1 . B1 B2 . B1 B2 D#3',
+         drums:{k:'x...x...x...x...', s:'....x.......x.x.', h:'x.xxx.xxx.xxx.xx'}}},
+    form:['A','A+','B','B+','A+'] },
+  chill: { title:'พักก่อนเพื่อน', bpm:88, swing:0.35,
+    inst:{lead:{w:'triangle',v:0.2,vib:true}, bass:{w:'triangle',v:0.3}, chord:{w:'sine',v:0.07,style:'pad'}, arp:{w:'triangle',v:0.05,every:2}, drum:0.5},
+    sections:{
+      A:{chords:'Fmaj7|Am7|Bbmaj7|C',
+         lead:'A4 - - C5 E5 - - . | G5 - E5 - C5 - - . | D5 - F5 - A5 - G5 F5 | E5 - - - G4 - - .',
+         bass:'F2 - - . C3 - . . | A2 - - . E2 - . . | Bb2 - - . F2 - . . | C3 - - . G2 - E2 .',
+         drums:{k:'x.........x.....', s:'........x.......', h:'x...x...x...x...'}},
+      B:{chords:'Dm7|Gm7|Bbmaj7|Csus4 C',
+         lead:'F5 - E5 D5 C5 - A4 - | Bb4 - D5 - F5 - - . | A5 - G5 - F5 - D5 - | E5 - - - - - . .',
+         bass:'D3 - . A2 - . D3 . | G2 - . D3 - . G2 . | Bb2 - . F2 - . Bb2 . | C3 - - - G2 - - .',
+         drums:{k:'x......x..x.....', s:'........x.......', h:'x.x.x.x.x.x.x.x.'}}},
+    form:['A','B','A+','B+'] },
+  crash: { title:'พังแล้วไง', bpm:116, swing:0,
+    inst:{lead:{w:'pulse25',v:0.14}, bass:{w:'square',v:0.1}, chord:{w:'square',v:0.04,style:'off'}, arp:{w:'pulse12',v:0.035,every:2}, drum:0.9},
+    sections:{
+      A:{chords:'D|G|A|D',
+         lead:'F#5 . A5 . F#5 . D5 . | G5 . B5 . G5 . D5 . | A5 G5 F#5 E5 C#5 . E5 . | D5 . . A4 D5 . . .',
+         bass:'D3 . A2 . D3 . A2 . | G2 . D3 . G2 . D3 . | A2 . E3 . A2 . C#3 . | D3 . A2 . D3 A2 B2 C#3',
+         drums:{k:'x.......x.......', s:'....x.......x...', h:'..x...x...x...x.'}},
+      B:{chords:'Bm|G|E7|A7',
+         lead:'B4 C5 C#5 D5 F#5 . D5 . | G5 F#5 G5 . B5 . G5 . | G#5 . E5 . D5 . B4 . | C#5 . E5 . G5 . A5 .',
+         bass:'B2 . F#2 . B2 . F#2 . | G2 . D3 . G2 . D3 . | E2 . B2 . E3 . D3 . | A2 . E2 . A2 B2 C#3 .',
+         drums:{k:'x...x...x...x...', s:'....x..x....x.x.', h:'x.x.x.x.x.x.x.x.'}}},
+    form:['A','A+','B','B+'] },
+  mochi: { title:'โมจิเด้ง หนี้เดิม', titleEn:'Mochi Bounce, Same Debt', bpm:106, swing:0.24,
+    inst:{lead:{w:'triangle',v:0.21}, bass:{w:'triangle',v:0.29}, chord:{w:'sine',v:0.055,style:'off'}, arp:{w:'pulse25',v:0.025,every:2}, drum:0.55},
+    sections:{
+      A:{chords:'Cmaj7|Am7|Dm7|G7',
+         lead:'E5 G5 . E5 C6 . G5 E5 | A5 . C6 A5 E5 . G5 . | F5 A5 . F5 D6 . A5 F5 | B5 A5 G5 . D5 G5 . .',
+         bass:'C3 . G2 . E3 . G2 . | A2 . E3 . C3 . E3 . | D3 . A2 . F3 . A2 . | G2 . D3 . B2 . D3 .',
+         drums:{k:'x.......x.......',s:'....x.......x...',h:'..x...x...x...x.'}},
+      B:{chords:'Fmaj7|Em7 Am7|Dm7 G7|Cmaj7',
+         lead:'A5 . G5 E5 F5 A5 C6 . | B5 G5 . E5 A5 C6 . A5 | F5 E5 D5 . G5 B5 . G5 | E5 G5 C6 - G5 E5 C5 .',
+         bass:'F2 . C3 . A2 . C3 . | E3 . B2 . A2 . E3 . | D3 . A2 . G2 . D3 . | C3 . G2 . C3 E3 G3 .',
+         drums:{k:'x.......x.....x.',s:'....x.......x...',h:'x.x...x.x.x...x.'}}},
+    form:['A','A+','B','B+'] },
+  troll: { title:'อ่านแล้ว ไม่ตอบ', titleEn:'Seen. No Reply.', bpm:118, swing:0.18,
+    inst:{lead:{w:'pulse25',v:0.12}, bass:{w:'triangle',v:0.3}, chord:{w:'square',v:0.025,style:'off'}, arp:{w:'triangle',v:0.04,every:2}, drum:0.7},
+    sections:{
+      A:{chords:'G|E7|Am|D7',
+         lead:'B4 . D5 B4 . G5 F#5/G5 . | G#5 . E5 . D5 E5 . B4 | C5 . E5 C5 . A5 G#5/A5 . | F#5 E5 D5 . C5 A4 D5 .',
+         bass:'G2 . D3 . B2 . D3 . | E2 . B2 . G#2 . B2 . | A2 . E3 . C3 . E3 . | D3 . A2 . C3 . A2 .',
+         drums:{k:'x.......x.x.....',s:'....x.......x..x',h:'..x...x...x...x.'}},
+      B:{chords:'C|Cm|G E7|Am D7',
+         lead:'E5 G5 . C6 B5 . G5 . | Eb5 G5 . C6 Bb5 . G5 . | B5 A5 G5 . G#5 E5 D5 . | C5 E5 A5 . F#5 E5 D5 .',
+         bass:'C3 . G2 . E3 . G2 . | C3 . G2 . Eb3 . G2 . | G2 . D3 . E2 . B2 . | A2 . E3 . D3 . A2 .',
+         drums:{k:'x.....x.x.......',s:'....x.......x.x.',h:'x.x.x.x...x.x.x.'}}},
+    form:['A','A+','B','B+'] },
+  spicy: { title:'จิ๋วแต่จี๊ด', titleEn:'Tiny but Spicy', bpm:138, swing:0,
+    inst:{lead:{w:'pulse12',v:0.105}, bass:{w:'triangle',v:0.29}, chord:{w:'triangle',v:0.045,style:'off'}, arp:{w:'pulse25',v:0.025,every:2}, drum:0.75},
+    sections:{
+      A:{chords:'D|Bm|G|A',
+         lead:'F#5/A5 . D6 A5 F#5 . E5 F#5 | B5 . A5 F#5 D5/F#5 . B4 . | G5/B5 . D6 B5 G5 . F#5 G5 | A5 G5 F#5 E5 C#5/E5 . A4 .',
+         bass:'D3 . A2 D3 . A2 D3 . | B2 . F#2 B2 . F#2 B2 . | G2 . D3 G2 . D3 G2 . | A2 . E3 A2 . E3 A2 .',
+         drums:{k:'x...x...x.......',s:'....x.......x...',h:'..x...x...x...x.'}},
+      B:{chords:'G|A|F#m Bm|Em A7',
+         lead:'B5 A5 G5 . D6/B5 . A5 G5 | C#6 B5 A5 . E6/C#6 . B5 A5 | A5 F#5 C#5 . B5 F#5 D5 . | G5 E5 B4 . C#5 E5 A5 .',
+         bass:'G2 . D3 . G2 B2 D3 . | A2 . E3 . A2 C#3 E3 . | F#2 . C#3 . B2 . F#2 . | E3 . B2 . A2 . E3 .',
+         drums:{k:'x...x...x.....x.',s:'....x.......x..x',h:'x.x.x.x.x.x.x.x.'}}},
+    form:['A','A+','B','B+'] },
+};
+const RUN_TRACKS = ['corp','crash','mochi','troll','spicy'];
+
+/* ---------- 3. STORE (localStorage with graceful fallback) ---------- */
+const Store = {
+  KEY:'pangjonpang.v1', ok:true,
+  d:{best:0, bestHeight:0, disc:{}, ach:{}, records:{}, survived:{}, vol:0.8, muted:false, tut:false, runs:0, lastTheme:'', lang:'', haptics:true, musicTrack:'auto', mode:'classic', speedFactor:1, modeBests:{}},
+  load() {
+    try {
+      const s = window.localStorage.getItem(this.KEY);
+      if (s) {
+        // A damaged save must not disable otherwise working storage.
+        let o = null;
+        try { o = JSON.parse(s); } catch (_) {}
+        if (o && typeof o === 'object' && !Array.isArray(o)) {
+          if (Number.isFinite(o.best)) this.d.best = Math.max(0, Math.floor(o.best));
+          if (Number.isFinite(o.bestHeight)) this.d.bestHeight = Math.max(0, Math.floor(o.bestHeight));
+          if (o.disc && typeof o.disc === 'object' && !Array.isArray(o.disc))
+            this.d.disc = Object.fromEntries(COMBOS.filter(c => Object.prototype.hasOwnProperty.call(o.disc, c.id) && o.disc[c.id]).map(c => [c.id, 1]));
+          for (const [field, ids] of [['ach', ACHIEVEMENTS.map(a => a.id)], ['records', RECORD_KEYS], ['survived', CRISIS_IDS], ['modeBests', MODE_BEST_KEYS]]) {
+            const v = o[field];
+            if (!v || typeof v !== 'object' || Array.isArray(v)) continue;
+            this.d[field] = Object.fromEntries(ids.filter(id => Object.prototype.hasOwnProperty.call(v, id) && Number.isFinite(v[id]) && v[id] > 0)
+              .map(id => [id, field === 'ach' ? 1 : Math.min(1000000000, Math.floor(v[id]))]));
+          }
+          if (Number.isFinite(o.vol)) this.d.vol = clamp(o.vol, 0, 1);
+          this.d.muted = !!o.muted; this.d.tut = !!o.tut;
+          if (Number.isFinite(o.runs)) this.d.runs = Math.max(0, Math.floor(o.runs));
+          if (typeof o.lastTheme === 'string') this.d.lastTheme = o.lastTheme;
+          if (o.lang === 'th' || o.lang === 'en') this.d.lang = o.lang;
+          if (MODE_IDS.includes(o.mode)) this.d.mode = o.mode;
+          if ([1,2,3].includes(o.speedFactor)) this.d.speedFactor = o.speedFactor;
+          if (typeof o.haptics === 'boolean') this.d.haptics = o.haptics;
+          if (o.musicTrack === 'auto' || Object.prototype.hasOwnProperty.call(SONG_DEFS, o.musicTrack)) this.d.musicTrack = o.musicTrack;
+        }
+      }
+      this.d.modeBests.classic = Math.max(this.d.modeBests.classic || 0, this.d.best);
+      localStorage.setItem('__pjp_t', '1'); localStorage.removeItem('__pjp_t');
+    } catch (e) { this.ok = false; }
+  },
+  save() {
+    if (!this.ok) return;
+    try { localStorage.setItem(this.KEY, JSON.stringify(this.d)); }
+    catch (e) { this.ok = false; UI.toast(S('storeFail')); UI.storeNote(); }
+  },
+};
+function detectLang() {
+  if (Store.d.lang === 'th' || Store.d.lang === 'en') return Store.d.lang;
+  const ls = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'th']).map(s => String(s).toLowerCase());
+  return ls.some(s => s.startsWith('th')) ? 'th' : 'en';
+}
+
+/* ---------- 4. AUDIO + HAPTICS ---------- */
+const HAPT = typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
+function buzz(p) { if (!HAPT || !Store.d.haptics || document.hidden) return; try { navigator.vibrate(p); } catch (e) {} }
+
+const AudioSys = {
+  ctx:null, master:null, musicBus:null, sfxBus:null, noise:null, waves:{}, timer:0,
+  ensure() {
+    if (this.ctx) { if (this.ctx.state !== 'running' && !document.hidden) this.ctx.resume().catch(() => {}); return this.ctx; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    let ctx;
+    try { ctx = new AC({latencyHint:'interactive'}); } catch (e) { try { ctx = new AC(); } catch (e2) { return null; } }
+    this.ctx = ctx;
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -14; comp.knee.value = 10; comp.ratio.value = 3.5; comp.attack.value = 0.004; comp.release.value = 0.2;
+    this.master = ctx.createGain(); this.master.gain.value = 0;
+    this.master.connect(comp); comp.connect(ctx.destination);
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 8500; lp.Q.value = 0.3;
+    this.musicBus = ctx.createGain(); this.musicBus.gain.value = 0.5; this.musicBus.connect(lp); lp.connect(this.master);
+    this.sfxBus = ctx.createGain(); this.sfxBus.gain.value = 0.9; this.sfxBus.connect(this.master);
+    const len = ctx.sampleRate, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    this.noise = buf;
+    this.waves.pulse25 = pulseWave(ctx, 0.25); this.waves.pulse12 = pulseWave(ctx, 0.125);
+    try { const s = ctx.createBufferSource(); s.buffer = ctx.createBuffer(1, 1, 22050); s.connect(ctx.destination); s.start(0); } catch (e) {}
+    this.applyVol(true);
+    this.timer = setInterval(() => Music.tick(), 25);
+    if (ctx.state !== 'running') ctx.resume().catch(() => {});
+    return ctx;
+  },
+  applyVol(instant) {
+    if (!this.ctx) return;
+    const v = Store.d.muted ? 0 : Math.pow(Store.d.vol, 1.6);
+    const g = this.master.gain, t = this.ctx.currentTime;
+    g.cancelScheduledValues(t);
+    if (instant) g.setValueAtTime(v, t); else { g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(v, t + 0.08); }
+  },
+  suspend() { if (this.ctx && this.ctx.state === 'running') this.ctx.suspend().catch(() => {}); },
+  resume() { if (this.ctx && this.ctx.state !== 'running') this.ctx.resume().catch(() => {}); },
+  get ok() { return !!(this.ctx && this.ctx.state === 'running'); },
+};
+function pulseWave(ctx, duty) {
+  const N = 40, re = new Float32Array(N), im = new Float32Array(N);
+  for (let n = 1; n < N; n++) re[n] = (2 / (n * Math.PI)) * Math.sin(n * Math.PI * duty);
+  return ctx.createPeriodicWave(re, im);
+}
+function releaseAudio(source, nodes) {
+  source.onended = () => {
+    for (const node of nodes) { try { node.disconnect(); } catch (_) {} }
+    source.onended = null;
+  };
+}
+const mtof = n => 440 * Math.pow(2, (n - 69) / 12);
+/* one synth voice: oscillator + ADSR (+ optional slide, vibrato, lowpass) */
+function voice(dest, wave, freq, t, dur, vol, e) {
+  const ctx = AudioSys.ctx; e = e || {};
+  const o = ctx.createOscillator();
+  if (AudioSys.waves[wave]) o.setPeriodicWave(AudioSys.waves[wave]); else o.type = wave;
+  o.frequency.setValueAtTime(freq, t);
+  if (e.slide) o.frequency.exponentialRampToValueAtTime(e.slide, t + (e.slideT || dur));
+  const a = e.a != null ? e.a : 0.004, d = e.d != null ? e.d : 0.09, s = e.s != null ? e.s : 0.55, r = e.r != null ? e.r : 0.05;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(vol, t + a);
+  g.gain.setTargetAtTime(vol * s, t + a, Math.max(0.005, d / 3));
+  g.gain.setTargetAtTime(0.0001, t + dur, Math.max(0.005, r / 4));
+  o.connect(g);
+  let out = g; const nodes = [o, g];
+  if (e.lp) { const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = e.lp; g.connect(f); out = f; nodes.push(f); }
+  out.connect(dest);
+  if (e.vib && dur > 0.25) {
+    const l = ctx.createOscillator(), lg = ctx.createGain();
+    l.frequency.value = 5.5; lg.gain.value = freq * 0.012; l.connect(lg); lg.connect(o.frequency);
+    releaseAudio(l, [l, lg]);
+    l.start(t + 0.15); l.stop(t + dur + r + 0.05);
+  }
+  releaseAudio(o, nodes);
+  o.start(t); o.stop(t + dur + r + 0.05);
+}
+function noiseHit(dest, t, dur, vol, type, freq, q, sweepTo) {
+  const ctx = AudioSys.ctx;
+  const s = ctx.createBufferSource(); s.buffer = AudioSys.noise;
+  const f = ctx.createBiquadFilter(); f.type = type; f.frequency.setValueAtTime(freq, t); f.Q.value = q || 0.8;
+  if (sweepTo) f.frequency.exponentialRampToValueAtTime(sweepTo, t + dur);
+  const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  s.connect(f); f.connect(g); g.connect(dest);
+  releaseAudio(s, [s, f, g]);
+  s.start(t, Math.random() * 0.5, dur + 0.05);
+}
+function kick(dest, t, v, f0, f1) {
+  const ctx = AudioSys.ctx, o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(f0 || 150, t); o.frequency.exponentialRampToValueAtTime(f1 || 45, t + 0.12);
+  g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+  o.connect(g); g.connect(dest); o.start(t); o.stop(t + 0.3);
+  releaseAudio(o, [o, g]);
+}
+const Drum = {
+  k:(d, t, v) => kick(d, t, 0.55 * v),
+  s:(d, t, v) => { noiseHit(d, t, 0.16, 0.32 * v, 'bandpass', 1900, 0.9); voice(d, 'triangle', 190, t, 0.05, 0.22 * v, {a:0.001, d:0.05, s:0.1, r:0.04}); },
+  h:(d, t, v) => noiseHit(d, t, 0.035, 0.11 * v, 'highpass', 7500, 0.7),
+};
+
+/* --- song compiler: text → MIDI-style event lists per 16th step --- */
+const NOTE_IDX = {C:0, D:2, E:4, F:5, G:7, A:9, B:11};
+function noteToMidi(s) {
+  const m = /^([A-G])(#|b)?(-?\d)$/.exec(s);
+  if (!m) throw new Error('bad note ' + s);
+  return (parseInt(m[3], 10) + 1) * 12 + NOTE_IDX[m[1]] + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0);
+}
+function parseLine(str, label) {
+  const out = []; let last = null;
+  const bars = str.split('|').map(b => b.trim().split(/\s+/));
+  bars.forEach((toks, bi) => {
+    if (toks.length !== 8) console.error('[song] bar needs 8 tokens:', label, bi, toks.join(' '));
+    let step = bi * 16;
+    for (const tok of toks) {
+      if (tok === '-') { if (last) last.len += 2; }
+      else if (tok === '.') { last = null; }
+      else if (tok.includes('/')) {
+        const [a, b] = tok.split('/');
+        if (a !== '.') { last = {s:step, n:noteToMidi(a), len:1}; out.push(last); }
+        if (b !== '.') { last = {s:step + 1, n:noteToMidi(b), len:1}; out.push(last); } else last = null;
+      } else { last = {s:step, n:noteToMidi(tok), len:2}; out.push(last); }
+      step += 2;
+    }
+  });
+  return out;
+}
+const QUAL = {'':[0,4,7], m:[0,3,7], '7':[0,4,7,10], m7:[0,3,7,10], maj7:[0,4,7,11], sus4:[0,5,7], dim:[0,3,6]};
+function chordNotes(sym) {
+  const m = /^([A-G])(#|b)?(.*)$/.exec(sym);
+  if (!m || !QUAL[m[3]]) throw new Error('bad chord ' + sym);
+  const root = (NOTE_IDX[m[1]] + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0) + 12) % 12;
+  let base = 48 + root; if (base < 53) base += 12;
+  return QUAL[m[3]].map(i => base + i);
+}
+function parseChords(str) {
+  const out = [];
+  str.split('|').forEach((bar, bi) => {
+    const syms = bar.trim().split(/\s+/), span = 16 / syms.length;
+    syms.forEach((sym, i) => out.push({s:bi * 16 + i * span, len:span, notes:chordNotes(sym)}));
+  });
+  return out;
+}
+function compileSong(id, def) {
+  const secs = {};
+  for (const k in def.sections) {
+    const D = def.sections[k];
+    secs[k] = {lead:parseLine(D.lead, id + k + ' lead'), bass:parseLine(D.bass, id + k + ' bass'), chords:parseChords(D.chords), drums:D.drums};
+  }
+  const totalSteps = def.form.length * 64;
+  const steps = Array.from({length:totalSteps}, () => []);
+  const style = def.inst.chord.style, every = def.inst.arp.every;
+  def.form.forEach((f, fi) => {
+    const D = secs[f[0]], plus = f.includes('+'), off = fi * 64;
+    D.lead.forEach(e => steps[off + e.s].push({c:'lead', n:e.n, l:e.len}));
+    D.bass.forEach(e => steps[off + e.s].push({c:'bass', n:e.n, l:e.len}));
+    D.chords.forEach(ch => {
+      for (let s = ch.s; s < ch.s + ch.len; s++) {
+        if (style === 'pad' && s === ch.s) steps[off + s].push({c:'chord', ns:ch.notes, l:ch.len});
+        else if (style === 'off' && s % 4 === 2) steps[off + s].push({c:'chord', ns:ch.notes, l:1});
+        else if (style === 'pulse' && s % 2 === 0) steps[off + s].push({c:'chord', ns:ch.notes, l:1});
+        if (plus && s % every === 0) steps[off + s].push({c:'arp', n:ch.notes[(s / every) % ch.notes.length] + 12, l:every});
+      }
+    });
+    for (let bar = 0; bar < 4; bar++) for (let i = 0; i < 16; i++) for (const k in D.drums) {
+      const ch = D.drums[k][i];
+      if (ch === 'x' || ch === 'X') steps[off + bar * 16 + i].push({c:k, v:(ch === 'X' ? 1.2 : 1) * (k === 'h' && i % 4 ? 0.7 : 1)});
+    }
+  });
+  return {id, title:def.title, bpm:def.bpm, swing:def.swing || 0, inst:def.inst, steps, totalSteps, stepDur:60 / def.bpm / 4,
+    seconds:totalSteps * 60 / def.bpm / 4};
+}
+const SONGS = {};
+for (const id in SONG_DEFS) SONGS[id] = compileSong(id, SONG_DEFS[id]);
+
+function scheduleStep(track, idx, t) {
+  const song = track.song, sd = song.stepDur, inst = song.inst, dest = track.gain;
+  if (song.swing && idx % 4 === 2) t += song.swing * sd;
+  for (const e of song.steps[idx]) {
+    switch (e.c) {
+      case 'lead': voice(dest, inst.lead.w, mtof(e.n), t, e.l * sd * 0.9, inst.lead.v, {a:0.005, d:0.12, s:0.6, r:0.06, vib:inst.lead.vib}); break;
+      case 'bass': voice(dest, inst.bass.w, mtof(e.n), t, e.l * sd * 0.85, inst.bass.v, {a:0.004, d:0.1, s:0.7, r:0.04}); break;
+      case 'chord': {
+        const pad = inst.chord.style === 'pad';
+        for (const n of e.ns) voice(dest, inst.chord.w, mtof(n), t, e.l * sd * (pad ? 0.95 : 0.6), inst.chord.v,
+          pad ? {a:0.06, d:0.3, s:0.6, r:0.2} : {a:0.003, d:0.06, s:0.25, r:0.03});
+        break;
+      }
+      case 'arp': voice(dest, inst.arp.w, mtof(e.n), t, sd * e.l * 0.7, inst.arp.v, {a:0.002, d:0.05, s:0.3, r:0.03}); break;
+      default: if (Drum[e.c]) Drum[e.c](dest, t, e.v * inst.drum);
+    }
+  }
+}
+
+/* --- music player: lookahead scheduler, max 2 tracks (only during crossfade) --- */
+const Music = {
+  active:[], cur:null, pos:{}, FADE:0.7, want:null, log:[], maxActive:0,
+  play(id) {
+    this.want = id;
+    const ctx = AudioSys.ctx;
+    if (!ctx || !SONGS[id]) return;
+    if (this.cur && this.cur.id === id) return;
+    const now = ctx.currentTime;
+    for (const t of this.active) if (t !== this.cur) this.hardStop(t, now);   // kill anything still fading
+    this.active = this.cur ? [this.cur] : [];
+    if (this.cur) {
+      const g = this.cur.gain.gain;
+      g.cancelScheduledValues(now); g.setValueAtTime(Math.max(0.0001, g.value), now); g.linearRampToValueAtTime(0.0001, now + this.FADE);
+      this.cur.stopAt = now + this.FADE;
+      this.pos[this.cur.id] = this.cur.step - (this.cur.step % 16);
+    }
+    const song = SONGS[id], gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, now); gain.gain.linearRampToValueAtTime(1, now + this.FADE);
+    gain.connect(AudioSys.musicBus);
+    const t = {id, song, gain, step:(this.pos[id] || 0) % song.totalSteps, nextTime:now + 0.06, stopAt:0};
+    this.active.push(t); this.cur = t;
+    this.maxActive = Math.max(this.maxActive, this.active.length);
+    this.log.push(id); if (this.log.length > 200) this.log.shift();
+  },
+  hardStop(t, now) {
+    const g = t.gain.gain; g.cancelScheduledValues(now); g.setValueAtTime(Math.max(0.0001, g.value), now); g.linearRampToValueAtTime(0.0001, now + 0.03);
+    t.stopAt = now;
+    setTimeout(() => { try { t.gain.disconnect(); } catch (e) {} }, 400);
+  },
+  tick() {
+    const ctx = AudioSys.ctx;
+    if (!ctx || ctx.state !== 'running' || document.hidden || Store.d.muted || Store.d.vol <= 0) return;
+    const now = ctx.currentTime, horizon = now + 0.12;
+    for (const t of this.active) {
+      const sd = t.song.stepDur;
+      if (t.nextTime < now - 0.25) { const skip = Math.ceil((now - t.nextTime) / sd); t.step = (t.step + skip) % t.song.totalSteps; t.nextTime += skip * sd; }
+      while (t.nextTime < horizon && (!t.stopAt || t.nextTime < t.stopAt)) {
+        try { scheduleStep(t, t.step, t.nextTime); } catch (e) { console.error(e); }
+        t.step = (t.step + 1) % t.song.totalSteps; t.nextTime += sd;
+      }
+    }
+    this.active = this.active.filter(t => {
+      if (t.stopAt && now > t.stopAt + 0.3) { try { t.gain.disconnect(); } catch (e) {} return false; }
+      return true;
+    });
+    this.maxActive = Math.max(this.maxActive, this.active.length);
+  },
+  audible() { const ctx = AudioSys.ctx; if (!ctx) return 0; return this.active.filter(t => !t.stopAt || t.stopAt > ctx.currentTime).length; },
+};
+
+/* --- sound effects --- */
+const SFX = {
+  get on() { return AudioSys.ok && !document.hidden && !Store.d.muted && Store.d.vol > 0; },
+  get t() { return AudioSys.ctx.currentTime + 0.004; },
+  get d() { return AudioSys.sfxBus; },
+  press()  { if (!this.on) return; voice(this.d, 'square', 1300, this.t, 0.02, 0.09, {a:0.001, d:0.01, s:0.3, r:0.01}); },
+  drop()   { if (!this.on) return; voice(this.d, 'sine', 760, this.t, 0.09, 0.09, {slide:330, a:0.002, d:0.05, s:0.6, r:0.03}); },
+  land(m, perfect) {
+    if (!this.on) return; const t = this.t;
+    kick(this.d, t, 0.55, 170 - m * 35, 50);
+    noiseHit(this.d, t, 0.06, 0.12, 'bandpass', 900 - m * 150, 1.2);
+    if (perfect) noiseHit(this.d, t, 0.09, 0.05, 'highpass', 6000, 0.7);
+  },
+  perfect(streak) {
+    if (!this.on) return; const t = this.t;
+    const sc = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24, 26, 28];
+    const n = 72 + sc[Math.min(streak - 1, sc.length - 1)];
+    voice(this.d, 'pulse25', mtof(n), t, 0.065, 0.13, {a:0.002, d:0.04, s:0.4, r:0.035});
+    if (streak % 5 === 0) voice(this.d, 'triangle', mtof(n + 12), t + 0.025, 0.09, 0.08, {a:0.002, d:0.05, s:0.4, r:0.04});
+  },
+  creak(risk) {
+    if (!this.on) return; const t = this.t;
+    voice(this.d, 'sawtooth', 95 + risk * 40, t, 0.32, 0.07 + risk * 0.06, {slide:70, a:0.03, d:0.2, s:0.7, r:0.08, lp:700, vib:true});
+  },
+  miss() { if (!this.on) return; const t = this.t; voice(this.d, 'sine', 1100, t, 0.5, 0.13, {slide:170, a:0.01, d:0.3, s:0.8, r:0.08}); noiseHit(this.d, t + 0.35, 0.25, 0.12, 'lowpass', 600, 0.7); },
+  skip() { if (!this.on) return; const t = this.t; noiseHit(this.d, t, 0.25, 0.16, 'bandpass', 400, 1.5, 3500); voice(this.d, 'triangle', 300, t + 0.05, 0.18, 0.12, {slide:700, slideT:0.12, a:0.005, d:0.1, s:0.6, r:0.05}); },
+  denied() { if (!this.on) return; const t = this.t; voice(this.d, 'square', 160, t, 0.08, 0.07); voice(this.d, 'square', 130, t + 0.11, 0.12, 0.07); },
+  battery() { if (!this.on) return; voice(this.d, 'sawtooth', 110, this.t, 0.25, 0.08, {lp:900, slide:80}); },
+  alert() { if (!this.on) return; const t = this.t; [880, 660, 880, 660].forEach((f, i) => voice(this.d, 'square', f, t + i * 0.11, 0.08, 0.06, {a:0.002, d:0.05, s:0.6, r:0.02})); },
+  eventStart() { if (!this.on) return; const t = this.t; [64, 67, 71].forEach((n, i) => voice(this.d, 'pulse25', mtof(n), t + i * 0.03, 0.18, 0.07)); },
+  milestone() { if (!this.on) return; const t = this.t; [72, 76, 79, 84].forEach((n, i) => voice(this.d, 'pulse25', mtof(n), t + i * 0.08, i === 3 ? 0.3 : 0.08, 0.1)); },
+  ui() { if (!this.on) return; voice(this.d, 'square', 900, this.t, 0.03, 0.05, {a:0.001, d:0.02, s:0.3, r:0.02}); },
+  notif() { if (!this.on) return; const t = this.t; voice(this.d, 'sine', 1480, t, 0.05, 0.05, {a:0.002, d:0.04, s:0.4, r:0.03}); voice(this.d, 'sine', 1975, t + 0.06, 0.07, 0.04, {a:0.002, d:0.05, s:0.4, r:0.04}); },
+  recover() { if (!this.on) return; const t = this.t; [67, 72].forEach((n, i) => voice(this.d, 'triangle', mtof(n), t + i * 0.07, 0.12, 0.12)); },
+  crash() {
+    if (!this.on) return; const t = this.t;
+    noiseHit(this.d, t, 1.1, 0.5, 'lowpass', 1600, 0.6, 90);
+    kick(this.d, t, 0.9, 120, 35); kick(this.d, t + 0.22, 0.6, 100, 35);
+    [63, 62, 61, 60].forEach((n, i) => voice(this.d, 'sawtooth', mtof(n - 12), t + 0.45 + i * 0.32, i === 3 ? 0.8 : 0.26, 0.11,
+      {a:0.02, d:0.1, s:0.8, r:0.1, lp:1100, vib:i === 3, slide:i === 3 ? mtof(n - 13) : 0}));
+  },
+  combo(id) {
+    if (!this.on) return; const t = this.t, d = this.d;
+    const arp = (ns, w, step, dur, v) => ns.forEach((n, i) => voice(d, w, mtof(n), t + i * step, dur, v));
+    switch (id) {
+      case 'ot': for (let i = 0; i < 6; i++) noiseHit(d, t + i * 0.05, 0.03, 0.12, 'highpass', 4000, 1); arp([72, 76, 79, 83, 84], 'square', 0.06, 0.07, 0.08); break;
+      case 'rich': voice(d, 'square', 988, t, 0.07, 0.09); voice(d, 'square', 1319, t + 0.07, 0.35, 0.09); arp([84, 88, 91, 96, 100, 103], 'triangle', 0.05, 0.1, 0.06); break;
+      case 'qq': voice(d, 'sine', 620, t, 0.9, 0.14, {slide:260, a:0.05, d:0.4, s:0.8, r:0.2}); noiseHit(d, t + 0.4, 0.6, 0.04, 'bandpass', 600, 2); break;
+      case 'loan': kick(d, t, 0.9, 140, 40); noiseHit(d, t, 0.15, 0.25, 'bandpass', 1500, 1); voice(d, 'triangle', 880, t + 0.08, 0.9, 0.12, {d:0.4, s:0.3, r:0.3}); voice(d, 'triangle', 1320, t + 0.08, 0.9, 0.06, {d:0.3, s:0.2, r:0.3}); break;
+      case 'viral': for (let i = 0; i < 3; i++) { voice(d, 'sine', 1568, t + i * 0.13, 0.05, 0.12); voice(d, 'sine', 2093, t + i * 0.13 + 0.05, 0.07, 0.12); } break;
+      case 'wlb': [60, 64, 67, 72].forEach(n => voice(d, 'triangle', mtof(n), t, 0.7, 0.07, {a:0.03, d:0.3, s:0.6, r:0.3})); break;
+    case 'jitter': for (let i = 0; i < 2; i++) { kick(d, t + i * 0.3, 0.7); kick(d, t + i * 0.3 + 0.11, 0.5); } voice(d, 'square', 200, t + 0.6, 0.2, 0.08, {slide:1400}); break;
+    default: arp([72,76,79], 'triangle', 0.06, 0.12, 0.08); break;
+    }
+  },
+};
+
+/* ---------- 5. LAYOUT ---------- */
+const cv = $('cv'), ctx = cv.getContext('2d', {alpha:false});
+const L = {W:360, H:800, dpr:1, cx:180, frameW:360, playTop:80, playBottom:700, playH:620, groundY:686, targetTopY:420, stage:null};
+function layout() {
+  L.W = window.innerWidth || document.documentElement.clientWidth;
+  L.H = window.innerHeight || document.documentElement.clientHeight;
+  // Bound full-screen raster work on Retina tablets; DOM controls stay at native resolution.
+  const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(2000000 / (L.W * L.H))));
+  if (dpr !== L.dpr) spriteCache.clear();
+  L.dpr = dpr;
+  const width = Math.floor(L.W * dpr), height = Math.floor(L.H * dpr);
+  if (cv.width !== width) cv.width = width;
+  if (cv.height !== height) cv.height = height;
+  L.cx = L.W / 2; L.frameW = Math.min(L.W, 480);
+  const hr = $('hud').getBoundingClientRect(), pr = $('pad').getBoundingClientRect();
+  L.playTop = hr.bottom + 4; L.playBottom = pr.top - 2;
+  L.playH = Math.max(200, L.playBottom - L.playTop);
+  L.groundY = L.playBottom - 74;   // leaves a ground band for the joke notification to sit on
+  L.targetTopY = L.playTop + L.playH * 0.56;
+  const sr = $('menuStage').getBoundingClientRect();
+  L.stage = sr.height > 40 ? sr : null;
+  if (run) run.hover = clamp(L.playH * 0.3, 120, 200);
+  UI.drawNext(true);
+  UI.fitScores();
+}
+
+/* ---------- 6. GAME STATE & RULES ---------- */
+const CFG = {v0:140, vInc:5.5, vMax:330, vCap:420, tol:7, tolEarly:12, tolTut:16, g:3800, battery:3, skipStart:2, skipMax:3, skipCost:5,
+  leanMax:5 * Math.PI / 180, leanTotal:9 * Math.PI / 180, shrinkMin:0.8, collapseTime:1.5};
+const G = {state:'menu', paused:false, time:0, lastUpdate:0, shake:0, flash:0, flashCol:C.paper, slow:0, gold:0, qqFx:0,
+  banner:null, floaters:[], parts:[], debris:[], spawnIn:0, collapseT:0, resultsAt:0, reduce:false};
+let run = null;
+
+function modeKey(mode = Store.d.mode, factor = Store.d.speedFactor) { return mode === 'speed' ? 'speed' + factor : mode; }
+function modeBest(r = run) { return r ? Store.d.modeBests[modeKey(r.mode, r.speedFactor)] || 0 : Store.d.modeBests[modeKey()] || 0; }
+function modeName(mode, factor) { return S('modeLabel', S(mode === 'speed' ? 'modeSpeed' : mode === 'timed' ? 'modeTimed' : 'modeClassic'), mode === 'speed' ? factor : null); }
+function newRun() {
+  const S0 = clamp(L.frameW / 390, 0.86, 1.08), bt = TYPES.base;
+  const mode = Store.d.mode, speedFactor = mode === 'speed' ? Store.d.speedFactor : 1;
+  const tut = mode === 'classic' && !Store.d.tut;
+  let theme = THEMES[0];
+  if (!tut) { theme = pick(THEMES.filter(t => t.id !== Store.d.lastTheme)); Store.d.lastTheme = theme.id; }
+  return {
+    mode, speedFactor, elapsed:0, completedTimed:false,
+    S:S0, blocks:[{type:'base', x:0, y:0, w:Math.round(bt.w * S0), h:Math.round(bt.h * S0), m:1e9, sq:0, flash:0}],
+    ifaces:[null], ang:[0], angV:[0], anchor:0, an:{fail:0, failDir:0, maxRisk:0, maxIdx:0, maxDir:0},
+    score:0, streak:0, battery:CFG.battery, skips:CFG.skipStart, skipMeter:0, placed:0, consumed:0,
+    history:[], queue:[], forced:[], cur:null, tutIdx:0, genCount:0,
+    fx:{ot:0, qq:0, viral:0, jitter:0, guard:0}, event:null, pending:null, nextEventAt:9 + rint(0, 3), lastEvent:'', trend:null,
+    theme, track:RUN_TRACKS[Store.d.runs % RUN_TRACKS.length], tut:tut ? 0 : -1, hypeUntil:0,
+    camY:0, camX:0, spawnSide:Math.random() < 0.5 ? -1 : 1, hover:clamp(L.playH * 0.3, 120, 200), nextMilestone:10, t:0,
+    stats:{perfect:0, maxStreak:0, misses:0, skips:0, by:{work:0, coffee:0, rent:0, likes:0, lux:0, rest:0}, combos:[], newCombos:[],
+      nearMiss:0, recover:0, trendHits:0, events:0, maxHeight:0, newAch:[], survived:{}},
+    quipSeen:{}, dangerT:-9, cause:null,
+  };
+}
+const topBlock = () => run.blocks[run.blocks.length - 1];
+const topY = () => { const b = topBlock(); return b.y + b.h; };
+function travelRange(w) { // box paces above the tower: from "barely touching" on one side to the other
+  const t = topBlock(), scr = Math.max(20, L.frameW / 2 - w / 2 - 6), cx = run.camX;
+  const half = (run.tut >= 0 && run.tut < 2) ? Math.max(12, t.w / 2 - 12) : (t.w + w) / 2 * 0.92;
+  let lo = Math.max(t.x - half, cx - scr), hi = Math.min(t.x + half, cx + scr);
+  if (hi - lo < 40) { const m = (lo + hi) / 2; lo = m - 20; hi = m + 20; }
+  return [lo, hi];
+}
+function speed() {
+  const r = run, b = r.cur;
+  let v = r.tut >= 0 ? 105 : Math.min(CFG.vMax, CFG.v0 + CFG.vInc * r.placed);
+  if (r.fx.qq > 0) v *= 0.5;
+  if (r.fx.jitter > 0) v *= 1.3;
+  if (b && b.ev === 'meeting') v *= 1.45;
+  if (b && b.ev === 'war' && !b.guarded) v *= 1.2;
+  return Math.min(v, CFG.vCap) * r.S * r.speedFactor;
+}
+function tolerance(b) {
+  const r = run;
+  let t = Math.max(CFG.tol, speed() / r.speedFactor * 0.028 / r.S) * r.S;
+  if (r.tut >= 0) t = CFG.tolTut * r.S;
+  else if (r.placed < 6) t = Math.max(t, CFG.tolEarly * r.S);
+  if (r.fx.ot > 0) t *= 2.8;
+  return t;
+}
+const graceNow = () => run.tut >= 0 ? 0.5 : Math.max(0, 0.35 * (1 - run.placed / 12));  // "fresh glue" for the first floors
+
+/* --- balance: book-stacking rule. For each joint, the centre of mass of everything above must sit over the contact area. --- */
+function analyze() {
+  const r = run, B = r.blocks, n = B.length, grace = graceNow();
+  let sumM = 0, sumMX = 0, fail = 0, failDir = 0, maxRisk = 0, maxIdx = 0, maxDir = 0;
+  r.ifaces.length = n;
+  for (let j = n - 1; j >= 1; j--) {
+    const b = B[j], d = B[j - 1];
+    sumM += b.m; sumMX += b.m * b.x;
+    const L0 = Math.max(b.x - b.w / 2, d.x - d.w / 2), R0 = Math.min(b.x + b.w / 2, d.x + d.w / 2);
+    const X = sumMX / sumM;
+    const f = r.ifaces[j] || (r.ifaces[j] = {});
+    f.L = L0; f.R = R0; f.y = b.y; f.X = X;
+    if (j <= r.anchor) { f.risk = 0; f.dir = 0; f.glued = true; f.target = 0; continue; }
+    f.glued = false;
+    if (R0 - L0 <= 0.5) { f.risk = 9; f.dir = Math.sign(b.x - d.x) || 1; }
+    else { const c = (L0 + R0) / 2, half = (R0 - L0) / 2; f.risk = Math.abs(X - c) / (half * (j === n - 1 ? 1 : 1 + grace)); f.dir = Math.sign(X - c) || 1; }
+    if (f.risk > 1) { fail = j; failDir = f.dir; }
+    else if (f.risk > maxRisk) { maxRisk = f.risk; maxIdx = j; maxDir = f.dir; }
+  }
+  // visual lean targets: every weak joint bends a little (banana tower = readable danger)
+  let total = 0;
+  for (let j = 1; j < n; j++) {
+    const f = r.ifaces[j];
+    f.target = (!f.glued && f.risk > 0.45 && f.risk <= 1) ? f.dir * Math.pow((f.risk - 0.45) / 0.55, 1.5) * CFG.leanMax : 0;
+    total += Math.abs(f.target);
+  }
+  if (total > CFG.leanTotal) for (let j = 1; j < n; j++) r.ifaces[j].target *= CFG.leanTotal / total;
+  r.an = {fail, failDir, maxRisk, maxIdx, maxDir};
+  return r.an;
+}
+/* where a box released at logical x would end up (same rules as the real landing — also drives the warning shadow) */
+function resolveDrop(b, lx) {
+  const r = run, top = topBlock();
+  let x = lx; const dx = x - top.x;
+  const trendHit = !!(r.trend && b.ev === 'trend' && Math.abs(x - r.trend.x) <= r.trend.w / 2);
+  let perfect = false;
+  if (!trendHit && Math.abs(dx) <= tolerance(b)) { x = top.x; perfect = true; }
+  if (r.fx.ot > 0 && !perfect && !trendHit) x = lerp(x, top.x, 0.35);     // OT glue pulls slightly to centre
+  const L0 = Math.max(x - b.w / 2, top.x - top.w / 2), R0 = Math.min(x + b.w / 2, top.x + top.w / 2);
+  const noContact = R0 - L0 <= 0.5;
+  return {x, dx, perfect, trendHit, noContact, miss:noContact || x < L0 || x > R0};
+}
+/* would adding a box of mass m at x make any joint below fail? (pure version of analyze) */
+function wouldTopple(x, m) {
+  const r = run, B = r.blocks, grace = graceNow();
+  let sumM = m, sumMX = m * x;
+  for (let j = B.length - 1; j >= 1; j--) {
+    if (j <= r.anchor) break;
+    const b = B[j], d = B[j - 1];
+    sumM += b.m; sumMX += b.m * b.x;
+    const L0 = Math.max(b.x - b.w / 2, d.x - d.w / 2), R0 = Math.min(b.x + b.w / 2, d.x + d.w / 2);
+    if (R0 - L0 <= 0.5) return true;
+    const X = sumMX / sumM, c = (L0 + R0) / 2, half = (R0 - L0) / 2;
+    if (Math.abs(X - c) / (half * (1 + grace)) > 1) return true;
+  }
+  return false;
+}
+/* visual transform of tower: joint j rotates everything above it about the edge it leans toward */
+function pivotOf(j) { const f = run.ifaces[j], a = run.ang[j]; return [a > 0 ? f.R : f.L, -f.y]; }
+function fwd(px, py, upto) { // logical draw-space point (y down) on block `upto` → visual draw-space
+  let ang = 0;
+  for (let j = upto; j >= 1; j--) {
+    const a = run.ang[j]; if (Math.abs(a) < 1e-6 || !run.ifaces[j]) continue;
+    const [cx, cy] = pivotOf(j); [px, py] = rot(px, py, cx, cy, a); ang += a;
+  }
+  return [px, py, ang];
+}
+function inv(px, py, upto) {
+  for (let j = 1; j <= upto; j++) {
+    const a = run.ang[j]; if (Math.abs(a) < 1e-6 || !run.ifaces[j]) continue;
+    const [cx, cy] = pivotOf(j); [px, py] = rot(px, py, cx, cy, -a);
+  }
+  return [px, py];
+}
+function topVisual() { const r = run, n = r.blocks.length - 1, t = topBlock(); const [x, y, a] = fwd(t.x, -(t.y + t.h), n); return {x, y, a}; }
+function landingX(b) { const tv = topVisual(), yAt = tv.y + Math.tan(tv.a) * (b.x - tv.x); return inv(b.x, yAt, run.blocks.length - 1)[0]; }
+
+/* --- box generation (theme weights + gentle combo bait so every run has different chances) --- */
+function baitNeeds(seq) {
+  const needs = [];
+  for (const c of COMBOS) {
+    for (let k = Math.min(c.seq.length - 1, seq.length); k >= 1; k--) {
+      let ok = true;
+      for (let i = 0; i < k; i++) if (seq[seq.length - k + i] !== c.seq[i]) { ok = false; break; }
+      if (ok) { needs.push(c.seq[k]); if (!Store.d.disc[c.id]) needs.push(c.seq[k]); break; }
+    }
+  }
+  return needs;
+}
+function genType() {
+  const r = run;
+  if (r.tut >= 0 && r.tutIdx < TUT_TYPES.length) return TUT_TYPES[r.tutIdx++];
+  if (r.forced.length) { const f = r.forced.shift(); if (f) return f; }
+  const seq = r.history.concat(r.cur ? [r.cur.type] : [], r.queue);
+  r.genCount++;
+  if (r.genCount > 2 && Math.random() < 0.3) { const need = baitNeeds(seq); if (need.length) return pick(need); }
+  const w = Object.assign({}, BASE_W);
+  for (const k in r.theme.w) w[k] *= r.theme.w[k];
+  const ev = r.event && r.event.def.id;
+  if (ev === 'interest') { w.rent *= 2.5; w.lux *= 1.5; }
+  if (ev === 'war') { w.work *= 1.5; w.coffee *= 2; }
+  if (ev === 'market' || ev === 'scam') { w.likes *= 2; w.lux *= 2; }
+  if (r.genCount <= 3) w.lux *= 0.2;
+  const l2 = seq.slice(-2);
+  if (l2.length === 2 && l2[0] === l2[1]) w[l2[0]] *= 0.25;
+  let tot = 0; for (const k in w) tot += w[k];
+  let x = Math.random() * tot;
+  for (const k of PLAY_TYPES) { x -= w[k]; if (x <= 0) return k; }
+  return 'work';
+}
+function spawn() {
+  const r = run;
+  const typeId = r.queue.length ? r.queue.shift() : genType();
+  while (r.queue.length < 1) r.queue.push(genType());
+  const T = TYPES[typeId], shrink = Math.max(CFG.shrinkMin, 1 - r.placed * 0.004);
+  const w = Math.round(T.w * r.S * shrink / 4) * 4, h = Math.round(T.h * r.S);   // quantised → few sprite sizes
+  const ev = r.event ? r.event.def.id : null;
+  const guarded = r.fx.guard > 0 && CRISIS_IDS.includes(ev);
+  let m = T.m; if (ev === 'rent' && typeId === 'rent') m *= 1.3;
+  if (!guarded) {
+    if (ev === 'interest' && ['rent','lux'].includes(typeId)) m *= 1.45;
+    if (ev === 'war' && ['work','coffee'].includes(typeId)) m *= 1.35;
+    if (ev === 'scam' && ['likes','lux'].includes(typeId)) m *= 2;
+  }
+  r.spawnSide *= -1;
+  const [lo, hi] = travelRange(w);
+  r.cur = {type:typeId, w, h, m, x:r.spawnSide < 0 ? lo : hi, y:topY() + r.hover, vy:0, state:'moving', dir:-r.spawnSide, ev, guarded, t:0, press:0, appear:0, shakeT:0};
+  if (ev === 'trend') { const side = Math.random() < 0.5 ? -1 : 1, t = topBlock(); r.trend = {x:t.x + side * rand(34, 52) * r.S, w:36 * r.S}; }
+  else r.trend = null;
+  UI.drawNext();
+}
+
+/* --- per-frame play update --- */
+function updatePlay(dt) {
+  const r = run; r.t += dt;
+  const b = r.cur;
+  if (!b) { if (G.spawnIn > 0) { G.spawnIn -= dt; if (G.spawnIn <= 0) spawn(); } return; }
+  b.t += dt; b.appear = Math.min(1, b.appear + dt * 7); b.shakeT = Math.max(0, b.shakeT - dt);
+  if (b.state === 'moving') {
+    const [lo, hi] = travelRange(b.w), v = speed();
+    b.x += b.dir * v * dt;
+    while (b.x > hi || b.x < lo) { if (b.x > hi) { b.x = hi - (b.x - hi); b.dir = -1; } else { b.x = lo + (lo - b.x); b.dir = 1; } }
+    b.y = lerp(b.y, topY() + r.hover, 1 - Math.exp(-dt * 10));
+  } else if (b.state === 'held') {
+    b.press += dt; b.y = lerp(b.y, topY() + r.hover, 1 - Math.exp(-dt * 10));
+  } else if (b.state === 'falling') {
+    b.vy += CFG.g * dt; b.y -= b.vy * dt;
+    const tv = topVisual(), yAt = tv.y + Math.tan(tv.a) * (b.x - tv.x);
+    if (-b.y >= yAt) { b.y = -yAt; const [lx] = inv(b.x, yAt, r.blocks.length - 1); landBox(b, lx); }
+  }
+}
+
+function landBox(b, lx) {
+  const r = run, top = topBlock(), n0 = r.blocks.length;
+  const d = resolveDrop(b, lx), perfect = d.perfect, trendHit = d.trendHit;
+  if (d.miss) { r.cur = null; missBox(b, Math.sign(d.dx) || 1, d.noContact); return; }
+  const nb = {type:b.type, x:d.x, y:top.y + top.h, w:b.w, h:b.h, m:b.m, sq:perfect ? 0.14 : 0.1, flash:perfect ? 0.65 : 0};
+  r.blocks.push(nb); r.ang.push(0); r.angV.push(0);
+  const prevRisk = r.an.maxRisk;
+  const an = analyze();
+  if (an.fail > 0) { r.cur = null; collapse(an.fail, an.failDir, 'topple'); return; }
+  // success
+  r.cur = null;
+  const st = r.stats;
+  r.placed++; st.by[b.type]++;
+  st.maxHeight = Math.max(st.maxHeight, r.blocks.length - 1);
+  if (perfect) { r.streak++; st.perfect++; st.maxStreak = Math.max(st.maxStreak, r.streak); } else r.streak = 0;
+  r.angV[n0] += perfect ? 0 : clamp(d.dx / top.w, -0.6, 0.6) * 2.4;
+  const mult = (r.fx.viral > 0 ? 2 : 1) * (r.fx.jitter > 0 ? 3 : 1) * (b.ev === 'payday' ? 2 : 1) * (trendHit ? 3 : 1);
+  let pts = (perfect ? 20 + 5 * Math.min(r.streak - 1, 10) : 10) * mult;
+  if (b.ev === 'meeting' && perfect) pts += 50;
+  if (b.ev === 'market') {
+    if (!b.guarded && ['likes','lux'].includes(b.type)) pts = Math.max(1, Math.round(pts / 2));
+    if (perfect) pts += 30;
+  }
+  r.score += pts;
+  const [vx, vy] = fwd(nb.x, -(nb.y + nb.h), r.blocks.length - 1);
+  floater('+' + pts + (mult > 1 ? '  ×' + mult : ''), vx, vy - 10, perfect ? C.pink : C.ink, perfect ? 22 : 18);
+  if (trendHit) { st.trendHits++; floater(S('onTrend'), vx, vy - 40, C.pink, 20); }
+  r.skipMeter += perfect ? 2 : 1;
+  while (r.skipMeter >= CFG.skipCost) { r.skipMeter -= CFG.skipCost; if (r.skips < CFG.skipMax) { r.skips++; UI.pulseSkip(); } }
+  if (r.skips >= CFG.skipMax) r.skipMeter = 0;
+  // juice
+  if (!perfect) SFX.land(b.m, false); buzz(perfect ? 10 : 7);
+  if (perfect) {
+    SFX.perfect(r.streak);
+    burst(vx, vy, 4 + Math.min(r.streak, 3), [C.acid, C.pink], 0.55);
+    const sq = tx(Q.streak)[r.streak]; if (sq) Notif.show('algo', sq, 2);
+  } else burst(vx, vy, 3, [C.ink, C.paper], 0.45);
+  // danger / recovery feedback
+  if (an.maxRisk > 0.62) {
+    if (r.t - r.dangerT > 6) { r.dangerT = r.t; SFX.creak(an.maxRisk); }
+  }
+  if (an.maxRisk > 0.8) st.nearMiss++;
+  if (prevRisk > 0.65 && an.maxRisk < prevRisk - 0.25) {
+    st.recover++; r.score += 40; SFX.recover(); floater(S('saved'), vx, vy - 44, C.blue, 20);
+    Notif.show('eng', pick(tx(Q.recover)), 2);
+  }
+  // the box you just placed "pushes" its joke (first time each run, then sometimes)
+  if (!r.quipSeen[b.type]) { if (Notif.show(b.type, pick(tx(TYPES[b.type].quips)), 1)) r.quipSeen[b.type] = 1; }
+  else if (Math.random() < 0.22) Notif.show(b.type, pick(tx(TYPES[b.type].quips)), 1);
+  // milestone
+  const hgt = r.blocks.length - 1;
+  if (hgt >= r.nextMilestone) {
+    r.score += 100; SFX.milestone(); buzz([12, 30, 12]);
+    banner(tx(Q.floors)[r.nextMilestone] || S('floorDefault', r.nextMilestone), S('heightBonus'), C.acid, false, 1.5);
+    r.nextMilestone += 10;
+  }
+  consumeBox('place', b);
+  r.history.push(b.type); if (r.history.length > 6) r.history.shift();
+  checkCombos();
+  checkAchievements();
+  G.spawnIn = 0.05;
+}
+
+function missBox(b, dir, noContact) {
+  const r = run, st = r.stats;
+  r.battery--; r.streak = 0; r.history = []; st.misses++;
+  const tv = topVisual();
+  G.debris.push({type:b.type, w:b.w, h:b.h, x:b.x, y:-b.y - b.h / 2, a:tv.a, vx:noContact ? 0 : dir * 140, vy:noContact ? b.vy * 0.6 : -80, va:noContact ? dir * 1.5 : dir * 5.5, life:0, dizzy:true});
+  SFX.miss(); SFX.battery(); buzz(45); G.shake = Math.max(G.shake, 6);
+  Notif.show('gravity', pick(tx(Q.miss)), 3);
+  UI.batteryHit();
+  consumeBox('miss', b);
+  if (r.battery <= 0) { collapse(1, dir, 'battery'); return; }
+  G.spawnIn = 0.35;
+}
+
+function consumeBox(kind, b) {
+  const r = run;
+  r.consumed++;
+  for (const k in r.fx) if (r.fx[k] > 0) r.fx[k]--;
+  if (r.event && b && b.ev === r.event.def.id) { r.event.left--; if (r.event.left <= 0) endEvent(); else UI.event(); }
+  if (r.pending) { r.pending.count--; if (r.pending.count <= 0) startEvent(); else UI.event(); }
+  else if (!r.event && r.tut < 0 && r.consumed >= r.nextEventAt) announceEvent();
+  if (r.tut >= 0) tutAdvance();
+}
+
+function checkCombos() {
+  const r = run, h = r.history;
+  let best = null;
+  for (const c of COMBOS) {
+    const n = c.seq.length;
+    if (h.length >= n && c.seq.every((t, i) => h[h.length - n + i] === t) && (!best || n > best.seq.length)) best = c;
+  }
+  if (best) triggerCombo(best);
+}
+function triggerCombo(c) {
+  const r = run, st = r.stats;
+  r.history = [];
+  const isNew = !Store.d.disc[c.id];
+  if (isNew) { Store.d.disc[c.id] = 1; Store.save(); st.newCombos.push(c.id); }
+  if (!st.combos.includes(c.id)) st.combos.push(c.id);
+  r.score += c.bonus;
+  const tv = topVisual();
+  switch (c.id) {
+    case 'ot': r.fx.ot = 3; burst(tv.x, tv.y, 26, [C.blue, C.paper, C.acid], 1.2); break;
+    case 'rich': G.gold = 2.4; floater(S('richMoney'), tv.x, tv.y - 118, C.ink, 22); floater(S('richStab'), tv.x, tv.y - 88, C.pink, 18); break;
+    case 'qq': r.fx.qq = 4; G.qqFx = 1; if (r.battery < CFG.battery) { r.battery++; floater(S('plusBattery'), tv.x, tv.y - 50, C.blue, 20); } else if (r.skips < CFG.skipMax) r.skips++; break;
+    case 'loan': r.anchor = r.blocks.length - 1; analyze(); floater(S('loanOk'), tv.x, tv.y - 50, C.ink, 20); G.shake = Math.max(G.shake, 8); break;
+    case 'viral': r.fx.viral = 5; for (let i = 0; i < 24; i++) G.parts.push({x:tv.x + rand(-80, 80), y:tv.y + rand(-10, 40), vx:rand(-30, 30), vy:rand(-260, -120), g:-40, life:0, max:rand(1, 1.8), size:rand(8, 14), col:C.pink, shape:'heart', a:0, va:rand(-2, 2)}); break;
+    case 'wlb': if (r.battery < CFG.battery) r.battery++; if (r.skips < CFG.skipMax) r.skips++; burst(tv.x, tv.y, 20, [C.acid, C.blue], 1); break;
+    case 'jitter': r.fx.jitter = 4; G.shake = Math.max(G.shake, 7); break;
+  }
+  if (c.grants) {
+    const g = c.grants;
+    r.battery = Math.min(CFG.battery, r.battery + (g.battery || 0));
+    r.skips = Math.min(CFG.skipMax, r.skips + (g.skips || 0));
+    for (const key of ['ot','qq','guard']) if (g[key]) r.fx[key] = Math.max(r.fx[key], g[key]);
+    if (g.gold) G.gold = g.gold;
+    burst(tv.x, tv.y, 5, [c.col, C.acid], 0.5);
+  }
+  SFX.combo(c.id); buzz([18, 40, 18]);
+  G.flash = 0.35; G.flashCol = c.col === C.ink ? C.acid : c.col;
+  banner(tx(c.name), tx(c.joke), c.col, isNew, 1.6, c.id);
+}
+
+/* --- events: announced 2 boxes ahead, then last a few boxes --- */
+function announceEvent() {
+  const r = run;
+  const pool = Object.values(EVENTS).filter(e => e.id !== r.lastEvent);
+  let tot = pool.reduce((s, e) => s + e.w, 0), x = Math.random() * tot, def = pool[0];
+  for (const e of pool) { x -= e.w; if (x <= 0) { def = e; break; } }
+  r.pending = {def, count:2};
+  if (def.id === 'rent') r.forced.push(null, 'rent', 'rent');
+  SFX.alert(); UI.event(true);
+}
+function startEvent() {
+  const r = run, def = r.pending.def;
+  r.event = {def, left:def.len}; r.pending = null; r.lastEvent = def.id; r.stats.events++;
+  r.nextEventAt = r.consumed + def.len + rint(8, 12);
+  SFX.eventStart(); UI.event(true);
+}
+function endEvent() {
+  const r = run, id = r.event && r.event.def.id;
+  // A last-box failure is not a completed crisis, even if consumeBox ran first.
+  if (CRISIS_IDS.includes(id) && G.state === 'play' && r.battery > 0) {
+    r.stats.survived[id] = (r.stats.survived[id] || 0) + 1;
+    Store.d.survived[id] = (Store.d.survived[id] || 0) + 1;
+    checkAchievements(); Store.save();
+  }
+  r.event = null; r.trend = null; UI.event();
+}
+
+function achievementMetrics() {
+  const d = Store.d, st = run && run.stats, timedDone = run && run.completedTimed;
+  const speedHeight = factor => Math.max(d.records['speed' + factor + 'Height'] || 0, st && run.mode === 'speed' && run.speedFactor === factor ? st.maxHeight : 0);
+  return {height:Math.max(d.bestHeight, d.records.height || 0, st ? st.maxHeight : 0), score:Math.max(d.best, d.records.score || 0, run ? run.score : 0),
+    streak:Math.max(d.records.streak || 0, st ? st.maxStreak : 0), perfect:Math.max(d.records.perfect || 0, st ? st.perfect : 0),
+    recover:Math.max(d.records.recover || 0, st ? st.recover : 0), skips:Math.max(d.records.skips || 0, st ? st.skips : 0),
+    combos:COMBOS.filter(c => d.disc[c.id]).length, runs:d.runs, ...d.survived,
+    speed1Height:speedHeight(1), speed2Height:speedHeight(2), speed3Height:speedHeight(3),
+    speed3Streak:Math.max(d.records.speed3Streak || 0, st && run.mode === 'speed' && run.speedFactor === 3 ? st.maxStreak : 0),
+    timedFinish:Math.max(d.records.timedFinish || 0, timedDone && st.maxHeight >= 10 ? 1 : 0),
+    timedScore:Math.max(d.records.timedScore || 0, timedDone ? run.score : 0),
+    timedClean:Math.max(d.records.timedClean || 0, timedDone && st.maxHeight >= 30 && st.misses === 0 ? 1 : 0),
+    crises:CRISIS_IDS.filter(id => d.survived[id] > 0).length,
+    ironLife:Math.max(d.records.ironLife || 0, st && st.misses === 0 && st.skips === 0 && CRISIS_IDS.every(id => st.survived[id] > 0) ? st.maxHeight : 0)};
+}
+function checkAchievements(silent = false) {
+  const metrics = achievementMetrics(), fresh = [];
+  for (const key of RECORD_KEYS) Store.d.records[key] = metrics[key];
+  for (const a of ACHIEVEMENTS) if (!Store.d.ach[a.id] && (metrics[a.metric] || 0) >= a.target) {
+    Store.d.ach[a.id] = 1; fresh.push(a);
+    if (run) run.stats.newAch.push(a.id);
+  }
+  if (fresh.length) {
+    Store.save();
+    if (!silent && G.state === 'play' && !G.banner) UI.toast(S('medalUnlocked') + ': ' + tx(fresh[0].name) + (fresh.length > 1 ? ' +' + (fresh.length - 1) : ''));
+  }
+}
+
+function tutAdvance() {
+  const r = run;
+  r.tut++;
+  if (r.tut >= 3) {
+    UI.tut(3);
+    Store.d.tut = true; Store.save();
+    r.tut = -1;
+    setTimeout(() => { if (run === r) UI.tut(-1); }, 3200);
+  } else UI.tut(r.tut);
+}
+
+/* --- player verbs --- */
+const Game = {
+  press(ts) {
+    const b = run && run.cur; if (!b || b.state !== 'moving') return false;
+    const now = performance.now();
+    let dtE = (Number.isFinite(ts) && Math.abs(ts - now) < 1000) ? (ts - G.lastUpdate) / 1000 : 0;
+    dtE = clamp(dtE, -0.05, 0.05);
+    const [lo, hi] = travelRange(b.w);
+    b.x = clamp(b.x + b.dir * speed() * dtE, lo, hi);
+    b.state = 'held'; b.press = 0;
+    SFX.press();
+    return true;
+  },
+  release() {
+    const b = run && run.cur; if (!b || b.state !== 'held') return;
+    b.state = 'falling'; b.vy = 140; SFX.drop();
+    if (run.tut === 0) UI.tut(0, true);
+  },
+  unpress() { const b = run && run.cur; if (b && b.state === 'held') b.state = 'moving'; },
+  holdSkip() {
+    const r = run, b = r && r.cur; if (!b || b.state !== 'held') return;
+    if (r.skips <= 0) { b.state = 'moving'; b.shakeT = 0.35; SFX.denied(); buzz([15, 40, 15]); UI.toast(S('denied')); UI.skipDenied(); return; }
+    r.skips--; r.stats.skips++;
+    if (b.ev === 'scam' && ['likes','lux'].includes(b.type)) {
+      r.score += 40; floater('+40', b.x, -b.y - b.h - 44, C.acid, 20);
+    }
+    G.debris.push({type:b.type, w:b.w, h:b.h, x:b.x, y:-b.y - b.h / 2, a:0, vx:(b.x > 0 ? -1 : 1) * 60 + rand(-40, 40), vy:-620, va:rand(6, 10) * (Math.random() < 0.5 ? -1 : 1), life:0, dizzy:true, yeet:true});
+    floater(S('nopeFloat'), b.x, -b.y - b.h - 16, C.pink, 26);
+    Notif.show('nope', pick(tx(Q.skip)), 2);
+    SFX.skip(); buzz([8, 30, 8]);
+    r.cur = null;
+    consumeBox('skip', b);
+    checkAchievements();
+    G.spawnIn = 0.22;
+  },
+};
+
+/* --- collapse & end of run --- */
+function collapse(k, dir, cause) {
+  const r = run, B = r.blocks, n = B.length;
+  G.state = 'collapse'; G.collapseT = 0; G.slow = 0.45;
+  Input.reset();
+  let heavy = null, hm = 0;
+  for (let i = k; i < n; i++) if (B[i].m > hm) { hm = B[i].m; heavy = B[i].type; }
+  const joint = cause === 'topple' ? r.ifaces[k] : null;
+  const point = joint ? fwd(dir > 0 ? joint.R : joint.L, -joint.y, k - 1) : null;
+  r.cause = {kind:cause, floor:k, dir, heavy, point};
+  const piv = (cause === 'topple' && r.ifaces[k]) ? fwd(dir > 0 ? r.ifaces[k].R : r.ifaces[k].L, -r.ifaces[k].y, k - 1) : [0, 0];
+  const w0 = cause === 'battery' ? rand(0.6, 1.2) * dir : dir * 1.7;
+  for (let i = k; i < n; i++) {
+    const b = B[i];
+    const [x, y, a] = fwd(b.x, -(b.y + b.h / 2), i);
+    const rx = x - piv[0], ry = y - piv[1];
+    const chaos = cause === 'battery' ? 1 : 0.35;
+    G.debris.push({type:b.type, w:b.w, h:b.h, x, y, a, vx:-w0 * ry + rand(-60, 60) * chaos + dir * 40, vy:w0 * rx * 0.4 + rand(-200, 0) * chaos,
+      va:w0 * rand(0.6, 1.6), life:0, dizzy:true, talk:Math.random() < 0.18 ? pick(tx(Q.crash)) : null});
+  }
+  B.length = k; r.ang.length = k; r.angV.length = k; r.ifaces.length = k;
+  if (r.cur) {
+    const c = r.cur;
+    G.debris.push({type:c.type, w:c.w, h:c.h, x:c.x, y:-c.y - c.h / 2, a:0, vx:dir * 90, vy:-100, va:dir * 4, life:0, dizzy:true});
+    r.cur = null;
+  }
+  analyze();
+  G.shake = G.reduce ? 6 : 18; G.flash = 0.6; G.flashCol = C.pink;
+  SFX.crash(); buzz([70, 50, 140]);
+  banner(S('crashTitle'), cause === 'battery' ? S('crashBattery') : S('crashAt', k, S(dir > 0 ? 'right' : 'left')), C.pink, false, CFG.collapseTime, 'crash');
+  UI.tut(-1); UI.event(); Notif.hide();
+}
+function titleFor(st, r) {
+  // each title scores how unusual the run was on that axis (share vs. normal mix), so titles follow real behaviour
+  const by = st.by, has = id => st.combos.includes(id), n = Math.max(1, r.placed), conf = Math.min(1, n / 8);
+  const wsum = PLAY_TYPES.reduce((a, k) => a + BASE_W[k], 0);
+  const lean = k => conf * (by[k] / n) / (BASE_W[k] / wsum) - 1;   // 0 = normal, 1 = double the usual share
+  const T = [
+    [{th:'พนักงานดีเด่นด้านนอนน้อย', en:'Sleepless Employee of the Month'}, lean('coffee') + (has('jitter') ? 1 : 0) + (has('ot') ? 0.4 : 0), {th:'กาแฟคือกรุ๊ปเลือด', en:'Coffee is a blood type'}],
+    [{th:'CEO แห่งการผ่อน', en:'CEO of Installments'}, lean('rent') + (has('loan') ? 1 : 0), {th:'มั่นคงทางหนี้ ยาวไป 30 ปี', en:'Financially stable: 30 years of debt'}],
+    [{th:'พักเป็นก็ปังได้', en:'Rest Is a Flex'}, lean('rest') + (has('qq') ? 1 : 0) + (has('wlb') ? 0.5 : 0), {th:'หลักฐานว่าการนอนคือกลยุทธ์', en:'Proof that naps are strategy'}],
+    [{th:'เศรษฐีทิพย์ประจำซอย', en:'Local Imaginary Millionaire'}, lean('lux') + (has('rich') ? 1 : 0), {th:'รวยในฟีด จนในแอปธนาคาร', en:'Rich in the feed, broke in the bank app'}],
+    [{th:'อินฟลูฯ ที่แม่กดไลก์คนเดียว', en:'Influencer (Fans: Mom)'}, lean('likes') + (has('viral') ? 1 : 0), {th:'ยอดวิวพุ่ง ยอดเงินนิ่ง', en:'Views up, money flat'}],
+    [{th:'ลูกรัก HR (ไม่ได้ขึ้นเงินเดือน)', en:"HR's Favorite (No Raise)"}, lean('work') + (has('ot') ? 0.8 : 0), {th:'เราเป็นครอบครัวเดียวกัน (ยกเว้นตอนประเมิน)', en:"We're family (except at review time)"}],
+    [{th:'ปรมาจารย์สายช่างแม่ง', en:'Grandmaster of Nope'}, st.skips / 3, {th:'ปล่อยวางเป็น ชีวิตเบาขึ้น', en:'Let it go, travel light'}],
+    [{th:'มือนิ่งกว่าเงินเดือน', en:'Steadier Than Your Salary'}, st.maxStreak / 8 + (st.perfect / n > 0.6 ? 0.4 : 0), {th:'วางเป๊ะจน HR สงสัย', en:'So precise HR got suspicious'}],
+    [{th:'นักกายกรรมบนเส้นด้าย', en:'Tightrope Acrobat'}, st.nearMiss / Math.max(3, n * 0.2) + st.recover / 3, {th:'เอียงแค่ไหนก็ยังรอด... จนไม่รอด', en:'Survived every tilt… until the last one'}],
+    [{th:'สายตามเทรนด์จนหอเอียง', en:'Trend Chaser, Tower Tilter'}, st.trendHits / 2, {th:'ปังทุกเทรนด์ พังทุกฐาน', en:'Slayed every trend, broke every base'}],
+    [{th:'ตึกระฟ้าแห่งความเหนื่อย', en:'Skyscraper of Exhaustion'}, st.maxHeight / 30, {th:'สูงจนเมฆอิจฉา', en:'So tall the clouds are jealous'}],
+    [{th:'ล้มไว ลุกไว (มั้ง)', en:'Fall Fast, Rise Fast (Maybe)'}, r.placed < 6 ? 1.6 : 0, {th:'อุ่นเครื่องเฉย ๆ ตาหน้าเอาจริง', en:"Just warming up. Next run's for real."}],
+    [{th:'พนักงานทดลองงาน', en:'Still on Probation'}, 0.55, {th:'ยังไม่ผ่านโปร แต่ใจผ่านแล้ว', en:"Didn't pass probation, but the vibes did"}],
+  ].map(t => [t[0], t[1] + Math.random() * 0.15, t[2]]);
+  T.sort((a, b) => b[1] - a[1]);
+  return {title:T[0][0], sub:T[0][2]};
+}
+function finishRun() {
+  if (!run || G.state === 'results') return;
+  const r = run, st = r.stats;
+  G.state = 'results'; G.resultsAt = performance.now();
+  const isBest = r.score > modeBest(r);
+  if (isBest) Store.d.modeBests[modeKey(r.mode, r.speedFactor)] = r.score;
+  if (r.mode === 'classic' && r.score > Store.d.best) Store.d.best = r.score;
+  Store.d.bestHeight = Math.max(Store.d.bestHeight || 0, st.maxHeight);
+  Store.d.runs++;
+  checkAchievements(true);
+  Store.save();
+  const t = titleFor(st, r);
+  const fav = PLAY_TYPES.reduce((a, k) => st.by[k] > st.by[a] ? k : a, 'work');
+  let cause, tip;
+  if (r.cause.kind === 'time') { cause = S('timedCause'); tip = S('timedTip'); }
+  else if (r.cause.kind === 'battery') { cause = S('causeBattery'); tip = S('tipBattery'); }
+  else {
+    cause = S('causeTopple', r.cause.floor, S(r.cause.dir > 0 ? 'right' : 'left'), r.cause.heavy ? esc(tx(TYPES[r.cause.heavy].name)) : '');
+    tip = S('tipTopple', S(r.cause.dir > 0 ? 'left' : 'right'));
+  }
+  UI.showResults({score:r.score, best:modeBest(r), isBest, cause, tip, title:tx(t.title), titleSub:tx(t.sub), height:st.maxHeight,
+    stats:[[S('stTop'), String(st.maxHeight)], [S('stStreak'), '×' + st.maxStreak],
+      [S('stPerfect'), (r.placed ? Math.round(st.perfect / r.placed * 100) : 0) + '%'],
+      [S('stSpent'), st.by[fav] ? S('spent', tx(TYPES[fav].name), st.by[fav], TYPES[fav].unit) : S('stNone')]],
+    combos:st.combos, newCombos:st.newCombos});
+}
+function startRun() {
+  checkpointRun();
+  Input.reset();
+  G.debris.length = 0; G.parts.length = 0; G.floaters.length = 0; G.banner = null; G.gold = 0; G.goldCarry = 0; G.qqFx = 0;
+  G.shake = 0; G.flash = 0; G.paused = false; G.spawnIn = 0;
+  run = newRun();
+  G.state = 'play';
+  UI.show('play');
+  spawn();
+  if (run.tut >= 0) UI.tut(0);
+  else UI.tut(-1);
+  UI.event();
+}
+function pauseGame() {
+  if (G.state !== 'play' || G.paused) return;
+  G.paused = true; Input.reset();
+  checkpointRun();
+  if (run && run.cur && run.cur.state === 'held') run.cur.state = 'moving';
+  UI.show('pause');
+}
+function resumeGame() { if (!G.paused || G.state !== 'play') return; G.paused = false; lastT = performance.now(); AudioSys.ensure(); UI.show('play'); }
+function checkpointRun() {
+  if (!run || (G.state !== 'play' && G.state !== 'collapse')) return;
+  // Save medal progress at lifecycle boundaries without blocking each game frame.
+  checkAchievements(true); Store.save();
+}
+function toMenu() { checkpointRun(); Input.reset(); G.state = 'menu'; G.paused = false; run = null; G.debris.length = 0; G.parts.length = 0; G.floaters.length = 0; G.banner = null; UI.show('menu'); }
+function goMenu() { if (G.state !== 'menu' || UI.panelOpen()) return; AudioSys.ensure(); SFX.ui(); startRun(); }
+
+/* --- feedback helpers --- */
+function floater(text, x, y, col, size) { G.floaters.push({text, x, y, col, size:size || 18, life:0, max:0.9}); }
+function burst(x, y, n, cols, power) {
+  for (let i = 0; i < n; i++) {
+    const a = rand(Math.PI * 1.05, Math.PI * 1.95), s = rand(160, 420) * power;
+    G.parts.push({x, y, vx:Math.cos(a) * s, vy:Math.sin(a) * s, g:900, life:0, max:rand(0.45, 0.8), size:rand(4, 8), col:pick(cols), shape:Math.random() < 0.5 ? 'tri' : 'rect', a:rand(0, 6), va:rand(-10, 10)});
+  }
+}
+function banner(title, sub, col, isNew, dur, id) { G.banner = {title, sub, col, isNew, t:0, dur:dur || 1.6, id}; }
+
+/* --- desired music for the current situation --- */
+function desiredTrack() {
+  if (Store.d.musicTrack !== 'auto' && SONGS[Store.d.musicTrack]) return Store.d.musicTrack;
+  if (G.state === 'menu') return 'rich';
+  if (G.paused) return 'chill';
+  if (G.state === 'collapse' || G.state === 'results') return 'crash';
+  const r = run;
+  if (r.fx.qq > 0) return 'chill';
+  if (r.tut >= 0) return 'rich';
+  if (r.streak >= 5 || r.fx.viral > 0 || r.fx.jitter > 0) r.hypeUntil = r.t + 3.5;
+  if (r.t < r.hypeUntil && (r.track === 'corp' || r.track === 'crash')) return 'algo';
+  return r.track;
+}
+
+/* ---------- 7. INPUT (tap = drop, hold = skip; never both) ---------- */
+const Input = {
+  act:null, HOLD:420, RING:130,
+  down(id, ts) {
+    if (G.state !== 'play' || G.paused || this.act) return;
+    if (!Game.press(ts)) return;
+    this.act = {id, t0:performance.now(), fired:false};
+  },
+  up(id) { const a = this.act; if (!a || a.id !== id) return; this.act = null; if (!a.fired) Game.release(); },
+  cancel(id) { const a = this.act; if (!a || (id != null && a.id !== id)) return; this.act = null; if (!a.fired) Game.unpress(); },
+  reset() { this.act = null; },
+  update() { const a = this.act; if (a && !a.fired && performance.now() - a.t0 >= this.HOLD) { a.fired = true; Game.holdSkip(); } },
+  progress() { const a = this.act; if (!a || a.fired) return 0; const t = performance.now() - a.t0; return t < this.RING ? 0 : Math.min(1, (t - this.RING) / (this.HOLD - this.RING)); },
+};
+cv.addEventListener('pointerdown', e => { if (e.button > 0 || e.isPrimary === false) return; e.preventDefault(); AudioSys.ensure(); try { cv.setPointerCapture(e.pointerId); } catch (_) {} Input.down(e.pointerId, e.timeStamp); });
+cv.addEventListener('pointerup', e => { Input.up(e.pointerId); });
+cv.addEventListener('pointercancel', e => { Input.cancel(e.pointerId); });
+cv.addEventListener('lostpointercapture', e => { Input.cancel(e.pointerId); });
+cv.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('dblclick', e => e.preventDefault());
+window.addEventListener('keydown', e => {
+  if (e.repeat) return;
+  // Native controls own letter keys and Escape as well as arrows/Enter.
+  if (e.target && e.target.closest && e.target.closest('input,select,textarea,[contenteditable="true"]')) return;
+  if (UI.panelOpen()) {
+    if (e.code === 'Escape') {
+      e.preventDefault();
+      const settings = !$('settings').classList.contains('hidden'), modes = !$('modePicker').classList.contains('hidden');
+      $(modes ? 'btnModeClose' : settings ? 'btnSettingsClose' : 'btnBookClose').click();
+    }
+    return;
+  }
+  const act = e.code === 'Space' || e.code === 'Enter' || e.code === 'ArrowDown';
+  // Let focused controls handle their own activation and range keys.
+  if (act && e.target && e.target.closest && e.target.closest('button,input,select,textarea,[contenteditable="true"]')) return;
+  if (G.state === 'menu' && act) { e.preventDefault(); goMenu(); return; }
+  if (act) {
+    if (G.state === 'play' && !G.paused) { e.preventDefault(); AudioSys.ensure(); Input.down('key', e.timeStamp); }
+    else if (G.state === 'results' && performance.now() - G.resultsAt >= 200) { e.preventDefault(); $('btnRetry').click(); }
+  } else if (e.code === 'Escape' || e.code === 'KeyP') { if (G.paused) resumeGame(); else pauseGame(); }
+  else if (e.code === 'KeyM') UI.toggleMute();
+});
+window.addEventListener('keyup', e => { if (e.code === 'Space' || e.code === 'Enter' || e.code === 'ArrowDown') Input.up('key'); });
+
+/* ---------- 8. RENDER ---------- */
+const spriteCache = new Map();
+const textWidths = new Map();
+function textWidth(c, text) {
+  const key = c.font + '|' + text;
+  if (textWidths.has(key)) return textWidths.get(key);
+  const width = c.measureText(text).width;
+  textWidths.set(key, width);
+  if (textWidths.size > 256) textWidths.delete(textWidths.keys().next().value);
+  return width;
+}
+function boxSprite(type, w, h, dizzy) {
+  const key = type + '|' + w + '|' + h + '|' + (dizzy ? 1 : 0) + '|' + LANG;
+  let s = spriteCache.get(key);
+  if (s) return s;
+  const pad = 8, cw = w + pad * 2, ch = h + pad * 2, dpr = Math.min(2, L.dpr);
+  const can = document.createElement('canvas'); can.width = Math.ceil(cw * dpr); can.height = Math.ceil(ch * dpr);
+  const c = can.getContext('2d'); c.scale(dpr, dpr); c.translate(pad, pad);
+  paintBox(c, TYPES[type], w, h, dizzy);
+  s = {can, pad, cw, ch}; spriteCache.set(key, s);
+  if (spriteCache.size > 120) spriteCache.delete(spriteCache.keys().next().value);
+  return s;
+}
+function paintPat(c, p, w, h) {
+  if (p === 'stripes') { c.fillStyle = C.blue; for (let y = 5; y < h; y += 11) c.fillRect(0, y, w, 4); }
+  else if (p === 'dots') { c.fillStyle = C.pink; let row = 0; for (let y = 5; y < h; y += 8, row++) for (let x = row % 2 ? 4 : 8; x < w; x += 8) { c.beginPath(); c.arc(x, y, 1.8, 0, 6.3); c.fill(); } }
+  else if (p === 'bricks') { c.strokeStyle = 'rgba(255,255,255,.16)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(0, h / 2); c.lineTo(w, h / 2); for (let x = 18; x < w; x += 36) { c.moveTo(x, 0); c.lineTo(x, h / 2); c.moveTo(x + 18, h / 2); c.lineTo(x + 18, h); } c.stroke(); }
+  else if (p === 'lines') { c.fillStyle = 'rgba(255,255,255,.25)'; c.fillRect(0, h - 10, w, 3); }
+  else if (p === 'hazard') { c.fillStyle = C.ink; for (let x = -10; x < w + 10; x += 16) { c.beginPath(); c.moveTo(x, h); c.lineTo(x + 8, h); c.lineTo(x + 16, h - 8); c.lineTo(x + 8, h - 8); c.closePath(); c.fill(); } }
+}
+function drawIcon(c, name, s, col, bg) {
+  c.save(); const k = s / 24; c.scale(k, k);
+  c.fillStyle = col; c.strokeStyle = col; c.lineWidth = 2.6; c.lineJoin = 'round'; c.lineCap = 'round';
+  switch (name) {
+    case 'brief': rr(c, -10, -4, 20, 14, 3); c.fill(); rr(c, -4.5, -9, 9, 6, 2); c.stroke(); c.fillStyle = bg; c.fillRect(-10, 1.5, 20, 2); break;
+    case 'cup': c.beginPath(); c.moveTo(-8, -3); c.lineTo(7, -3); c.lineTo(5, 10); c.lineTo(-6, 10); c.closePath(); c.fill();
+      c.beginPath(); c.arc(7.5, 3, 4, -Math.PI / 2, Math.PI / 2); c.stroke();
+      c.lineWidth = 2; c.beginPath(); c.moveTo(-3, -6); c.quadraticCurveTo(-5, -9, -3, -12); c.moveTo(2, -6); c.quadraticCurveTo(0, -9, 2, -12); c.stroke(); break;
+    case 'house': c.beginPath(); c.moveTo(-11, 0); c.lineTo(0, -10); c.lineTo(11, 0); c.closePath(); c.fill(); c.fillRect(-8, -1, 16, 11); c.fillStyle = bg; c.fillRect(-2.5, 3, 5, 7); break;
+    case 'heart': c.beginPath(); c.moveTo(0, 9); c.bezierCurveTo(-12, 1, -11, -9, -5, -9); c.bezierCurveTo(-2, -9, 0, -6, 0, -4); c.bezierCurveTo(0, -6, 2, -9, 5, -9); c.bezierCurveTo(11, -9, 12, 1, 0, 9); c.fill(); break;
+    case 'gem': c.beginPath(); c.moveTo(-10, -3); c.lineTo(-5, -9); c.lineTo(5, -9); c.lineTo(10, -3); c.lineTo(0, 10); c.closePath(); c.fill();
+      c.strokeStyle = bg; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-10, -3); c.lineTo(10, -3); c.moveTo(-3, -3); c.lineTo(0, 10); c.lineTo(3, -3); c.stroke(); break;
+    case 'moon': c.beginPath(); c.arc(-1, 1, 9, 0, 6.3); c.fill(); c.fillStyle = bg; c.beginPath(); c.arc(4, -3, 8, 0, 6.3); c.fill();
+      c.fillStyle = col; c.font = '900 9px ' + FONT; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('z', 7, -6); break;
+    case 'baht': c.lineWidth = 2.4; c.beginPath(); c.arc(0, 0, 9.5, 0, 6.3); c.stroke(); c.font = '900 14px ' + FONT; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('฿', 0, 1); break;
+    case 'dizzy': c.lineWidth = 2.4; for (const ex of [-5, 5]) { c.beginPath(); c.moveTo(ex - 3, -5); c.lineTo(ex + 3, 1); c.moveTo(ex + 3, -5); c.lineTo(ex - 3, 1); c.stroke(); }
+      c.beginPath(); c.moveTo(-4, 7); c.quadraticCurveTo(0, 4, 4, 7); c.stroke(); break;
+    case 'down': c.lineWidth = 3.2; c.beginPath(); c.moveTo(0, -10); c.lineTo(0, 8); c.moveTo(-7, 1); c.lineTo(0, 9); c.lineTo(7, 1); c.stroke(); break;
+    case 'x': c.lineWidth = 3.6; c.beginPath(); c.moveTo(-7, -7); c.lineTo(7, 7); c.moveTo(7, -7); c.lineTo(-7, 7); c.stroke(); break;
+    case 'warn': c.beginPath(); c.moveTo(0, -11); c.lineTo(11, 9); c.lineTo(-11, 9); c.closePath(); c.fill();
+      c.fillStyle = bg; c.fillRect(-1.6, -4, 3.2, 7.5); c.fillRect(-1.6, 5, 3.2, 2.6); break;
+    case 'spark': c.beginPath(); c.moveTo(0, -11); c.quadraticCurveTo(2, -2, 11, 0); c.quadraticCurveTo(2, 2, 0, 11); c.quadraticCurveTo(-2, 2, -11, 0); c.quadraticCurveTo(-2, -2, 0, -11); c.fill(); break;
+  }
+  c.restore();
+}
+function paintBox(c, T, w, h, dizzy) {
+  const r = T.r, name = tx(T.name);
+  c.fillStyle = C.ink; rr(c, 4, 4, w, h, r); c.fill();
+  c.fillStyle = T.fill; rr(c, 0, 0, w, h, r); c.fill();
+  if (T.pat) { c.save(); rr(c, 0, 0, w, h, r); c.clip(); paintPat(c, T.pat, w, h); c.restore(); }
+  c.lineWidth = 3; c.strokeStyle = C.ink; rr(c, 1.5, 1.5, w - 3, h - 3, Math.max(1, r - 1)); c.stroke();
+  const bs = Math.round(Math.min(h - 14, w < 100 ? 24 : 28));
+  let fs = 15; const avail = w - bs - 16;
+  c.font = '900 ' + fs + 'px ' + FONT; let tw = c.measureText(name).width;
+  while (tw > avail && fs > 10) { fs--; c.font = '900 ' + fs + 'px ' + FONT; tw = c.measureText(name).width; }
+  const showLabel = tw <= avail;
+  const gw = bs + (showLabel ? 4 + tw : 0), gx = (w - gw) / 2, bx = gx + bs / 2, by = h / 2;
+  c.fillStyle = T.badge; c.beginPath(); c.arc(bx, by, bs / 2, 0, 6.3); c.fill(); c.lineWidth = 2.5; c.strokeStyle = C.ink; c.stroke();
+  c.save(); c.translate(bx, by); drawIcon(c, dizzy ? 'dizzy' : T.ico, bs * 0.78, T.icoCol, T.badge); c.restore();
+  if (showLabel) {
+    const lx = gx + bs + 4;
+    if (T.pat === 'stripes' || T.pat === 'dots') { c.fillStyle = C.paper; rr(c, lx - 4, by - fs * 0.78, tw + 8, fs * 1.56, 6); c.fill(); }
+    c.fillStyle = T.lab; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(name, lx, by + 1);
+  }
+}
+function drawSprite(c, b, x, by, sx, sy, dizzy) { // x centre, by = bottom (draw space)
+  const s = boxSprite(b.type, b.w, b.h, dizzy);
+  if (sx === 1 && sy === 1) { c.drawImage(s.can, x - b.w / 2 - s.pad, by - b.h - s.pad, s.cw, s.ch); return; }
+  c.save(); c.translate(x, by); c.scale(sx, sy); c.drawImage(s.can, -b.w / 2 - s.pad, -b.h - s.pad, s.cw, s.ch); c.restore();
+}
+function drawAppIcon(el, app) {
+  const c = el.getContext('2d'), s = el.width;
+  c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, s, s);
+  c.scale(s / 36, s / 36);
+  c.fillStyle = app.col; rr(c, 2, 2, 32, 32, 9); c.fill(); c.lineWidth = 2.5; c.strokeStyle = C.ink; c.stroke();
+  c.translate(18, 18); drawIcon(c, app.ico, 22, app.icoCol, app.col);
+}
+
+function drawBG(c) {
+  c.fillStyle = C.paper; c.fillRect(0, 0, L.W, L.H);
+  const playing = run && G.state !== 'menu';
+  const cam = playing ? run.camY : G.time * 18, camx = playing ? run.camX * 0.25 : 0;
+  const par = cam * 0.3, band = 380;
+  const k0 = Math.floor((par - 300) / band), k1 = Math.floor((par + L.H + 300) / band);
+  const colors = [C.pink, C.blue, C.acid];
+  for (let k = k0; k <= k1; k++) {
+    const R = srand(k + 1000);
+    for (let i = 0; i < 2; i++) {
+      const side = (k + i) % 2 ? -1 : 1;
+      const x = L.cx - camx + side * (L.frameW * 0.36 + R() * L.frameW * 0.2), y = L.H - (k * band + i * 190 - par) - R() * 60;
+      const s = 50 + R() * 90, kind = Math.floor(R() * 5), col = colors[Math.floor(R() * 3)];
+      c.globalAlpha = col === C.pink ? (playing ? 0.2 : 0.3) : col === C.acid ? (playing ? 0.3 : 0.45) : (playing ? 0.12 : 0.18);
+      c.fillStyle = col; c.strokeStyle = col; c.lineWidth = 10;
+      c.beginPath();
+      if (kind === 0) { c.arc(x, y, s / 2, 0, 6.3); c.fill(); }
+      else if (kind === 1) { c.arc(x, y, s / 2.4, 0, 6.3); c.stroke(); }
+      else if (kind === 2) { c.moveTo(x, y - s / 2); c.lineTo(x + s / 2, y + s / 2); c.lineTo(x - s / 2, y + s / 2); c.closePath(); c.fill(); }
+      else if (kind === 3) { c.moveTo(x - s / 2, y); for (let z = 0; z < 5; z++) c.lineTo(x - s / 2 + (z + 0.5) * s / 5, y + (z % 2 ? 12 : -12)); c.stroke(); }
+      else { c.arc(x, y, s / 2, Math.PI, 0); c.closePath(); c.fill(); }
+    }
+  }
+  c.globalAlpha = 1;
+}
+function drawGround(c) {
+  c.fillStyle = C.ink; c.fillRect(-L.W, 0, L.W * 2, L.H + 400);
+  c.fillStyle = C.acid; c.fillRect(-L.W, 0, L.W * 2, 10);
+  c.fillStyle = C.ink; for (let x = -L.W; x < L.W; x += 20) { c.beginPath(); c.moveTo(x, 10); c.lineTo(x + 10, 0); c.lineTo(x + 18, 0); c.lineTo(x + 8, 10); c.fill(); }
+  // Keep the ground clear: a world-space caption scrolls behind the fixed control pad.
+}
+function drawTower(c, originY) {
+  const r = run, B = r.blocks, n = B.length, pulse = 0.5 + 0.5 * Math.sin(G.time * 10);
+  c.save();
+  drawSprite(c, B[0], B[0].x, -B[0].y, 1, 1);
+  for (let j = 1; j < n; j++) {
+    const a = r.ang[j], f = r.ifaces[j];
+    if (f && Math.abs(a) > 1e-5) { const [px, py] = pivotOf(j); c.translate(px, py); c.rotate(a); c.translate(-px, -py); }
+    const b = B[j], sy = originY - b.y;
+    if (sy < -120 || sy - b.h > L.H + 120) continue;
+    const sq = b.sq || 0;
+    drawSprite(c, b, b.x, -b.y, 1 + sq * 0.55, 1 - sq);
+    if (b.flash > 0) { c.globalAlpha = b.flash * 0.7; c.fillStyle = C.paper; rr(c, b.x - b.w / 2, -b.y - b.h, b.w, b.h, 6); c.fill(); c.globalAlpha = 1; }
+    if (f && f.glued && j === r.anchor) { // bolts where the mortgage locked the base
+      c.fillStyle = C.acid; c.strokeStyle = C.ink; c.lineWidth = 2;
+      for (const bx of [b.x - b.w / 2 + 10, b.x + b.w / 2 - 10]) { c.beginPath(); c.arc(bx, -b.y, 5, 0, 6.3); c.fill(); c.stroke(); }
+    }
+    if (f && !f.glued && f.risk > 0.6) { // crack on the lifted side
+      const lift = f.dir > 0 ? f.L : f.R, w2 = (f.R - f.L) * 0.55 * -f.dir;
+      c.strokeStyle = C.pink; c.lineWidth = 3.5; c.globalAlpha = 0.6 + 0.4 * pulse; c.beginPath(); c.moveTo(lift, -f.y);
+      for (let z = 1; z <= 5; z++) c.lineTo(lift + w2 * z / 5, -f.y + (z % 2 ? -4 : 3));
+      c.stroke(); c.globalAlpha = 1;
+      if (f.risk > 0.75) {
+        const ex = lift - f.dir * 16; c.fillStyle = C.pink; c.beginPath(); c.arc(ex, -f.y, 10 + pulse * 2, 0, 6.3); c.fill();
+        c.strokeStyle = C.ink; c.lineWidth = 2.5; c.stroke(); c.fillStyle = C.ink; c.font = '900 15px ' + FONT; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('!', ex, -f.y + 1);
+      }
+    }
+  }
+  drawTopOverlays(c, B[n - 1]);
+  c.restore();
+}
+function drawTopOverlays(c, t) {
+  const r = run, ty = -(t.y + t.h);
+  // centre notch on the top surface
+  c.fillStyle = C.ink; c.beginPath(); c.moveTo(t.x - 6, ty); c.lineTo(t.x + 6, ty); c.lineTo(t.x, ty + 7); c.closePath(); c.fill();
+  // trend zone
+  if (r.trend && r.cur && r.cur.ev === 'trend') {
+    const z = r.trend; c.globalAlpha = 0.22 + 0.1 * Math.sin(G.time * 8); c.fillStyle = C.pink; c.fillRect(z.x - z.w / 2, ty - 120, z.w, 120); c.globalAlpha = 1;
+    c.setLineDash([6, 5]); c.strokeStyle = C.pink; c.lineWidth = 3; c.strokeRect(z.x - z.w / 2, ty - 120, z.w, 120); c.setLineDash([]);
+    stickerText(c, S('trendZone'), z.x, ty - 132, 14, C.pink, C.ink, -4);
+  }
+  // landing shadow: warns "MISS!" or "TOPPLE!" before you drop (uses the exact landing rules)
+  const b = r.cur;
+  if (b && (b.state === 'moving' || b.state === 'held')) {
+    const lx = landingX(b), d = resolveDrop(b, lx);
+    const bad = d.miss ? 'miss' : (wouldTopple(d.x, b.m) ? 'topple' : null);
+    c.fillStyle = bad ? C.pink : C.ink; c.globalAlpha = bad ? 0.7 : 0.2;
+    c.fillRect(lx - b.w / 2, ty - 6, b.w, 6); c.globalAlpha = 1;
+    if (bad) stickerText(c, S(bad), lx, ty - 22, 14, C.pink, C.ink, 3);
+  }
+}
+function stickerText(c, text, x, y, size, bg, fg, rotDeg) {
+  c.save(); c.translate(x, y); c.rotate((rotDeg || 0) * Math.PI / 180);
+  c.font = '900 ' + size + 'px ' + FONT; const w = textWidth(c, text) + size * 1.1, h = size * 1.7;
+  c.fillStyle = C.ink; rr(c, -w / 2 + 3, -h / 2 + 3, w, h, 8); c.fill();
+  c.fillStyle = bg; rr(c, -w / 2, -h / 2, w, h, 8); c.fill(); c.lineWidth = 2.5; c.strokeStyle = C.ink; c.stroke();
+  c.fillStyle = fg; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(text, 0, 1);
+  c.restore(); return w;
+}
+function drawCurrent(c) {
+  const r = run, b = r.cur; if (!b) return;
+  const tv = topVisual(), yAt = tv.y + Math.tan(tv.a) * (b.x - tv.x);
+  const by = -b.y;
+  if (b.state !== 'falling') { // drop guide
+    c.strokeStyle = C.ink; c.globalAlpha = 0.25; c.lineWidth = 2; c.setLineDash([4, 6]);
+    c.beginPath(); c.moveTo(b.x, by + 4); c.lineTo(b.x, yAt - 8); c.stroke(); c.setLineDash([]); c.globalAlpha = 1;
+  }
+  let sx = 1, sy = 1, ox = 0;
+  const ap = b.appear; if (ap < 1) { const e = 1 - Math.pow(1 - ap, 3); sx = sy = 0.6 + 0.4 * e; }
+  const hp = Input.progress();
+  if (b.state === 'held') { sx *= 1.04; sy *= 0.93; ox = hp > 0 ? Math.sin(G.time * 70) * hp * 3 : 0; }
+  if (b.state === 'falling') { sx *= 0.94; sy *= 1.08; }
+  if (b.shakeT > 0) ox += Math.sin(G.time * 60) * 6 * (b.shakeT / 0.35);
+  drawSprite(c, b, b.x + ox, by, sx, sy);
+  if (CRISIS_IDS.includes(b.ev) && b.state !== 'falling') {
+    const speculative = ['likes','lux'].includes(b.type);
+    const label = b.guarded ? 'protected' : b.ev === 'scam' && speculative ? 'scamBox' : b.ev === 'market' && speculative ? 'marketBox' :
+      b.ev === 'war' ? 'fastBox' : b.ev === 'interest' && ['rent','lux'].includes(b.type) ? 'heavyBox' : null;
+    if (label) stickerText(c, S(label), b.x + ox, by - b.h - 16, 12, b.guarded ? C.acid : C.pink, C.ink, -2);
+  }
+  // centre notch under the moving box
+  c.fillStyle = C.ink; c.beginPath(); c.moveTo(b.x + ox - 6, by + 2); c.lineTo(b.x + ox + 6, by + 2); c.lineTo(b.x + ox, by + 9); c.closePath(); c.fill();
+  if (r.fx.ot > 0) { // OT glue drips
+    c.fillStyle = C.acid; c.strokeStyle = C.ink; c.lineWidth = 2;
+    for (const k of [-0.3, 0.05, 0.32]) { const dx = b.x + ox + b.w * k, len = 6 + 4 * Math.sin(G.time * 4 + k * 9); rr(c, dx - 3, by - 2, 6, len + 4, 3); c.fill(); c.stroke(); }
+  }
+  if (b.ev === 'meeting' && b.state === 'moving') { c.strokeStyle = C.blue; c.lineWidth = 3; c.globalAlpha = 0.6; for (let i = 0; i < 3; i++) { const yy = by - b.h * (0.25 + i * 0.25), xx = b.x - b.dir * (b.w / 2 + 8); c.beginPath(); c.moveTo(xx, yy); c.lineTo(xx - b.dir * (16 + i * 6), yy); c.stroke(); } c.globalAlpha = 1; }
+  if (b.state === 'held' && hp > 0) { // hold ring = "Nope" charging
+    const rad = Math.max(b.w, b.h) / 2 + 14, cy = by - b.h / 2;
+    c.lineWidth = 7; c.strokeStyle = C.ink; c.globalAlpha = 0.25; c.beginPath(); c.arc(b.x, cy, rad, 0, 6.3); c.stroke(); c.globalAlpha = 1;
+    c.strokeStyle = r.skips > 0 ? C.pink : C.ink; c.beginPath(); c.arc(b.x, cy, rad, -Math.PI / 2, -Math.PI / 2 + hp * Math.PI * 2); c.stroke();
+    stickerText(c, S(r.skips > 0 ? 'nope' : 'noQuota'), b.x, cy - rad - 14, 15, r.skips > 0 ? C.pink : C.paper, C.ink, -3);
+  }
+}
+function drawDebris(c, list, view) {
+  for (const d of list) {
+    // Do not rasterize new dizzy sprites for falling floors outside the viewport.
+    if (view) {
+      const pad = Math.hypot(d.w, d.h) / 2 + 80, x = d.x + view.x, y = d.y + view.y;
+      if (x + pad < 0 || x - pad > L.W || y + pad < 0 || y - pad > L.H) continue;
+    }
+    c.save(); c.translate(d.x, d.y); c.rotate(d.a);
+    drawSprite(c, d, 0, d.h / 2, 1, 1, d.dizzy);
+    c.restore();
+    if (d.talk && d.life < 1.3) stickerText(c, d.talk, d.x, d.y - d.h, 13, C.paper, C.ink, -5);
+  }
+}
+function drawParts(c, list, screen) {
+  for (const p of list) {
+    if (!!p.screen !== screen) continue;
+    const k = 1 - p.life / p.max; if (k <= 0) continue;
+    c.globalAlpha = Math.min(1, k * 1.6); c.fillStyle = p.col;
+    c.save(); c.translate(p.x, p.y); c.rotate(p.a); const s = p.size;
+    if (p.shape === 'tri') { c.beginPath(); c.moveTo(0, -s); c.lineTo(s, s); c.lineTo(-s, s); c.closePath(); c.fill(); }
+    else if (p.shape === 'heart') { drawIcon(c, 'heart', s * 2, p.col, p.col); }
+    else if (p.shape === 'coin') { c.beginPath(); c.arc(0, 0, s, 0, 6.3); c.fill(); c.strokeStyle = C.ink; c.lineWidth = 2; c.stroke(); c.fillStyle = C.ink; c.font = '900 ' + Math.round(s * 1.3) + 'px ' + FONT; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(LANG === 'en' ? '$' : '฿', 0, 1); }
+    else c.fillRect(-s / 2, -s / 2, s, s * 0.6);
+    c.restore();
+  }
+  c.globalAlpha = 1;
+}
+function drawFloaters(c) {
+  for (const f of G.floaters) {
+    const k = f.life / f.max; c.globalAlpha = k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3;
+    c.font = '900 ' + f.size + 'px ' + FONT; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.lineWidth = 5; c.strokeStyle = C.paper; c.lineJoin = 'round'; c.strokeText(f.text, f.x, f.y); c.fillStyle = f.col; c.fillText(f.text, f.x, f.y);
+  }
+  c.globalAlpha = 1;
+}
+function wrapLines(c, text, maxW) {
+  const words = text.split(' '), lines = []; let line = '';
+  for (const w of words) { const t = line ? line + ' ' + w : w; if (textWidth(c, t) > maxW && line) { lines.push(line); line = w; } else line = t; }
+  if (line) lines.push(line); return lines;
+}
+function drawScreenFX(c, topScreenY) {
+  const r = run;
+  if (G.state === 'collapse' && r.cause && r.cause.point) {
+    const [px, py] = r.cause.point, x = L.cx - r.camX + px, y = L.groundY + r.camY + py;
+    if (y > L.playTop && y < L.playBottom) {
+      c.fillStyle = C.paper; c.strokeStyle = C.pink; c.lineWidth = 3;
+      c.beginPath(); c.arc(x, y, 14, 0, Math.PI * 2); c.fill(); c.stroke();
+      c.fillStyle = C.pink; c.beginPath(); c.arc(x, y, 4, 0, Math.PI * 2); c.fill();
+    }
+  }
+  // danger glow on the side the tower leans
+  if (r && G.state === 'play' && r.an.maxRisk > 0.7) {
+    const side = r.an.maxDir, a = (r.an.maxRisk - 0.7) / 0.3 * (0.35 + 0.25 * Math.sin(G.time * 9));
+    const gx = side > 0 ? L.W : 0, g = c.createLinearGradient(gx, 0, gx - side * 70, 0);
+    g.addColorStop(0, 'rgba(255,45,170,' + a.toFixed(3) + ')'); g.addColorStop(1, 'rgba(255,45,170,0)');
+    c.fillStyle = g; c.fillRect(side > 0 ? L.W - 70 : 0, L.playTop, 70, L.playH);
+  }
+  if (G.qqFx > 0) { c.globalAlpha = G.qqFx * 0.12; c.fillStyle = C.blue; c.fillRect(0, 0, L.W, L.H); c.globalAlpha = 1; }
+  if (r && r.fx.jitter > 0) { const a = 0.1 + 0.08 * Math.sin(G.time * 14); c.strokeStyle = 'rgba(255,45,170,' + a.toFixed(3) + ')'; c.lineWidth = 18; c.strokeRect(0, 0, L.W, L.H); }
+  if (G.gold > 0) {
+    const a = Math.min(1, G.gold) * 0.55, g = c.createRadialGradient(L.cx, L.H / 2, L.H * 0.25, L.cx, L.H / 2, L.H * 0.75);
+    g.addColorStop(0, 'rgba(255,200,61,0)'); g.addColorStop(1, 'rgba(255,200,61,' + a.toFixed(3) + ')');
+    c.fillStyle = g; c.fillRect(0, 0, L.W, L.H);
+  }
+  drawParts(c, G.parts, true);
+  if (G.flash > 0) { c.globalAlpha = Math.min(0.6, G.flash); c.fillStyle = G.flashCol; c.fillRect(0, 0, L.W, L.H); c.globalAlpha = 1; }
+  // combo / milestone banner — below the landing surface, clear of the moving box and the joke notification
+  if (G.banner && G.banner.t < G.banner.dur) {
+    const B = G.banner, k = B.t / B.dur;
+    const y = B.id === 'crash' ? L.playTop + L.playH * 0.38 : clamp(topScreenY + 120, L.playTop + 150, L.playBottom - 140);
+    const pop = k < 0.1 ? 0.3 + 7 * k : k < 0.16 ? 1.0 + (0.16 - k) * 1.8 : 1, al = k > 0.8 ? 1 - (k - 0.8) / 0.2 : 1;
+    c.save(); c.globalAlpha = al; c.translate(L.cx, y); c.scale(pop, pop); c.rotate(-3 * Math.PI / 180);
+    const maxW = Math.min(360, L.frameW - 44);
+    const layoutKey = maxW + '|' + LANG;
+    if (!B.layout || B.layout.key !== layoutKey) {
+      let tf = 28; c.font = '900 28px ' + FONT; let tw = textWidth(c, B.title);
+      while (tw > maxW && tf > 17) { tf--; c.font = '900 ' + tf + 'px ' + FONT; tw = textWidth(c, B.title); }
+      c.font = '800 16px ' + FONT; const sl = B.sub ? wrapLines(c, B.sub, maxW) : [];
+      const sw = sl.length ? Math.max(...sl.map(l => textWidth(c, l))) : 0;
+      B.layout = {key:layoutKey, tf, sl, w:Math.max(tw, sw) + 34, h:46 + sl.length * 21};
+    }
+    const {tf, sl, w, h} = B.layout;
+    c.fillStyle = C.ink; rr(c, -w / 2 + 6, -h / 2 + 6, w, h, 14); c.fill();
+    c.fillStyle = B.col; rr(c, -w / 2, -h / 2, w, h, 14); c.fill(); c.lineWidth = 4; c.strokeStyle = C.ink; c.stroke();
+    const dark = B.col === C.ink || B.col === C.blue;
+    c.fillStyle = dark ? C.paper : C.ink; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.font = '900 ' + tf + 'px ' + FONT; c.fillText(B.title, 0, -h / 2 + 25);
+    c.font = '800 16px ' + FONT; sl.forEach((l, i) => c.fillText(l, 0, -h / 2 + 52 + i * 21));
+    if (B.isNew) stickerText(c, S('newCombo'), w / 2 - 20, -h / 2 - 6, 14, C.acid, C.ink, 10);
+    c.restore();
+  }
+}
+
+/* --- home demo tower --- */
+const Demo = {
+  blocks:[], falling:null, debris:[], t:0, wait:0.6, phase:0, off:0,
+  reset() { this.blocks = []; this.falling = null; this.debris = []; this.phase = 0; this.wait = 0.5; this.off = 0; },
+  update(dt) {
+    this.t += dt;
+    if (this.phase === 0) {
+      if (!this.falling) {
+        this.wait -= dt;
+        if (this.wait <= 0) {
+          const type = PLAY_TYPES[(this.blocks.length * 5 + 1) % 6], T = TYPES[type];
+          this.off += (this.blocks.length % 2 ? -1 : 1) * rand(6, 22) + (this.blocks.length > 3 ? 9 : 0);
+          const sc = L.stage ? clamp(L.stage.height / 300, 0.45, 1.3) : 1;
+          this.falling = {type, w:Math.round(T.w * 0.78), h:Math.round(T.h * 0.78), x:this.off, y:-(L.stage ? L.stage.height / sc + 40 : 480), vy:0};
+        }
+      } else {
+        const f = this.falling; f.vy += 2600 * dt; f.y += f.vy * dt;
+        const top = -32 - this.blocks.reduce((s, b) => s + b.h, 0);
+        if (f.y >= top) { f.y = top; this.blocks.push({type:f.type, w:f.w, h:f.h, x:f.x, sq:0.25}); this.falling = null; this.wait = 0.35;
+          if (this.blocks.length >= 7) { this.phase = 1; this.wait = 0.8; } }
+      }
+    } else if (this.phase === 1) {
+      this.wait -= dt;
+      if (this.wait <= 0) {
+        let y = -32;
+        this.blocks.forEach((b, i) => { this.debris.push({type:b.type, w:b.w, h:b.h, x:b.x, y:y - b.h / 2, a:0, vx:40 + i * 22 + rand(-10, 10), vy:-rand(40, 160), va:rand(0.8, 2.4), life:0, dizzy:true}); y -= b.h; });
+        this.blocks = []; this.phase = 2; this.wait = 1.6;
+      }
+    } else { this.wait -= dt; if (this.wait <= 0) this.reset(); }
+    for (const b of this.blocks) b.sq = Math.max(0, b.sq - dt * 2.5);
+    for (const d of this.debris) { d.vy += 1600 * dt; d.x += d.vx * dt; d.y += d.vy * dt; d.a += d.va * dt; }
+  },
+  draw(c) {
+    if (!L.stage) return;
+    const ox = L.cx, oy = L.stage.bottom - 6, scale = clamp(L.stage.height / 300, 0.45, 1.3);
+    c.save(); c.beginPath(); c.rect(0, L.stage.top - 4, L.W, L.stage.height + 40); c.clip();
+    c.translate(ox, oy); c.scale(scale, scale);
+    drawSprite(c, {type:'base', w:180, h:32}, 0, 0, 1, 1);
+    let y = -32;
+    for (const b of this.blocks) { drawSprite(c, b, b.x, y, 1 + b.sq * 0.5, 1 - b.sq); y -= b.h; }
+    if (this.falling) { const f = this.falling; drawSprite(c, f, f.x, f.y, 1, 1); }
+    drawDebris(c, this.debris);
+    c.restore();
+  },
+};
+
+function render() {
+  const c = ctx;
+  c.setTransform(L.dpr, 0, 0, L.dpr, 0, 0);
+  // Background decoration must never prevent the playable world from rendering.
+  c.save();
+  try { drawBG(c); }
+  catch (e) { console.error(e); c.globalAlpha = 1; c.fillStyle = C.paper; c.fillRect(0, 0, L.W, L.H); }
+  finally { c.restore(); }
+  if (G.state === 'menu' || !run) { Demo.draw(c); return; }
+  const r = run;
+  const sh = G.shake > 0 ? G.shake : 0;
+  const ox = sh ? rand(-sh, sh) : 0, oy = sh ? rand(-sh, sh) : 0;
+  const originY = L.groundY + r.camY;
+  c.save(); c.translate(L.cx - r.camX + ox, originY + oy);
+  drawGround(c);
+  drawTower(c, originY);
+  drawCurrent(c);
+  drawDebris(c, G.debris, {x:L.cx - r.camX + ox, y:originY + oy});
+  drawParts(c, G.parts, false);
+  drawFloaters(c);
+  c.restore();
+  const tv = topVisual();
+  drawScreenFX(c, originY + tv.y);
+}
+
+/* ---------- 9. UI (DOM overlays) ---------- */
+const SVG_ON = '<svg viewBox="0 0 24 24"><path d="M3 9h4l5-4v14l-5-4H3z" fill="#181818"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="#181818" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>';
+const SVG_OFF = '<svg viewBox="0 0 24 24"><path d="M3 9h4l5-4v14l-5-4H3z" fill="#181818"/><path d="M16 9l6 6M22 9l-6 6" stroke="#FF2DAA" stroke-width="2.8" stroke-linecap="round"/></svg>';
+const SVG_VIB = '<rect x="8" y="3" width="8" height="18" rx="2" fill="none" stroke="#181818" stroke-width="2.4"/><path d="M4.5 8v8M19.5 8v8M1.5 10.5v3M22.5 10.5v3" stroke="#181818" stroke-width="2.2" stroke-linecap="round"/>';
+const SVG_VIB_ON = '<svg viewBox="0 0 24 24">' + SVG_VIB + '</svg>';
+const SVG_VIB_OFF = '<svg viewBox="0 0 24 24" opacity=".55">' + SVG_VIB + '<path d="M3 21L21 3" stroke="#FF2DAA" stroke-width="3" stroke-linecap="round" opacity="1"/></svg>';
+let flagUid = 0;
+function flagSVG(lang) {
+  if (lang === 'th') return '<svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#DA121A"/><rect y="3.33" width="30" height="13.34" fill="#FFFFFF"/><rect y="6.67" width="30" height="6.66" fill="#00247D"/></svg>';
+  const id = 'ukc' + (++flagUid);
+  return '<svg viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><clipPath id="' + id + '"><path d="M30,15h30v15zv15h-30zh-30v-15zv-15h30z"/></clipPath>' +
+    '<path d="M0,0v30h60v-30z" fill="#012169"/><path d="M0,0L60,30M60,0L0,30" stroke="#fff" stroke-width="6"/>' +
+    '<path d="M0,0L60,30M60,0L0,30" clip-path="url(#' + id + ')" stroke="#C8102E" stroke-width="4"/>' +
+    '<path d="M30,0v30M0,15h60" stroke="#fff" stroke-width="10"/><path d="M30,0v30M0,15h60" stroke="#C8102E" stroke-width="6"/></svg>';
+}
+
+/* joke notifications: one card, replaced by priority (danger/miss > streak/skip > box joke) */
+const Notif = {
+  cur:null, timer:0, lastJokeAt:-Infinity,
+  show(appKey, msg, prio) {
+    if (G.state !== 'play' || !msg) return false;
+    const now = performance.now(), cur = this.cur;
+    if (prio < 3 && (now - this.lastJokeAt < 7000 || G.banner || run.tut >= 0 || run.placed < 3 || run.an.maxRisk > 0.65)) return false;
+    if (cur && now - cur.t < 1100 && cur.prio > prio) return false;
+    const app = APPS[appKey]; if (!app) return false;
+    this.cur = {t:now, prio};
+    if (prio < 3) this.lastJokeAt = now;
+    $('notifApp').textContent = tx(app.name); $('notifMsg').textContent = msg;
+    drawAppIcon($('notifIco'), app);
+    const el = $('notif'); el.classList.remove('hide');
+    if (el.animate) el.animate([{transform:'translateY(12px) scale(.97)'}, {transform:'none'}], {duration:220, easing:'cubic-bezier(.2,1.3,.4,1)'});
+    clearTimeout(this.timer); this.timer = setTimeout(() => this.hide(), prio >= 3 ? 1800 : 1400);
+    return true;
+  },
+  hide() { clearTimeout(this.timer); this.cur = null; $('notif').classList.add('hide'); },
+};
+
+function setLang(l, save) {
+  LANG = l === 'en' ? 'en' : 'th';
+  const combo = G.banner && COMBO_BY[G.banner.id];
+  if (combo) { G.banner.title = tx(combo.name); G.banner.sub = tx(combo.joke); G.banner.layout = null; }
+  if (save) { Store.d.lang = LANG; Store.save(); }
+  document.documentElement.lang = LANG;
+  document.body.classList.toggle('en', LANG === 'en');
+  document.title = S('docTitle');
+  document.querySelectorAll('[data-s]').forEach(el => { el.textContent = S(el.dataset.s); });
+  document.querySelectorAll('[data-s-html]').forEach(el => { el.innerHTML = S(el.dataset.sHtml); });
+  document.querySelectorAll('[data-s-aria]').forEach(el => { el.setAttribute('aria-label', S(el.dataset.sAria)); });
+  spriteCache.clear();
+  UI.cache = {};
+  Notif.hide();   // a joke already on screen would stay in the old language
+  UI.updateBook(); UI.syncSound(); UI.event();
+  if (run && run.tut >= 0 && G.state === 'play') UI.tut(run.tut);
+  layout();
+}
+
+async function shareResult() {
+  const d = UI.lastResult; if (!d) return;
+  const text = S('shareText', d.title, fmt(d.score), d.height);
+  try { if (navigator.share) { await navigator.share({title:S('docTitle'), text}); return; } }
+  catch (e) { if (e && e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(text); UI.toast(S('copied')); return; } catch (e) {}
+  try {
+    const ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;opacity:0;left:0;top:0';
+    document.body.appendChild(ta); ta.select(); const ok = document.execCommand('copy'); ta.remove();
+    UI.toast(ok ? S('copied') : text);
+  } catch (e) { UI.toast(text); }
+}
+
+const UI = {
+  cache:{}, scoreMetrics:{}, shownScore:0, toastT:0, lastResult:null, bookTab:'combos',
+  init() {
+    const on = (id, fn) => $(id).addEventListener('click', e => { e.stopPropagation(); AudioSys.ensure(); SFX.ui(); fn(e); });
+    on('btnMode', () => { this.syncMode(); $('modePicker').classList.remove('hidden'); $('btnModeClose').focus(); });
+    on('btnModeClose', () => { $('modePicker').classList.add('hidden'); $('btnMode').focus(); });
+    for (const mode of MODE_IDS) on('mode' + mode[0].toUpperCase() + mode.slice(1), () => { Store.d.mode = mode; Store.save(); this.syncMode(); this.updateBook(); });
+    for (const factor of [1,2,3]) on('speed' + factor, () => { Store.d.speedFactor = factor; Store.save(); this.syncMode(); this.updateBook(); });
+    on('btnStart', () => startRun());
+    on('btnRetry', () => { if (performance.now() - G.resultsAt < 200) return; startRun(); });
+    on('btnMenu', () => toMenu());
+    on('btnShare', () => shareResult());
+    on('btnPause', () => pauseGame());
+    on('btnResume', () => resumeGame());
+    on('btnRestart', () => startRun());
+    on('btnQuit', () => toMenu());
+    on('btnSettings', () => { $('settings').classList.remove('hidden'); $('btnSettingsClose').focus(); });
+    on('btnSettingsClose', () => { $('settings').classList.add('hidden'); $('btnSettings').focus(); });
+    on('btnBook', () => { this.updateBook(); $('book').classList.remove('hidden'); });
+    on('btnBookClose', () => $('book').classList.add('hidden'));
+    for (const [id, tab] of [['tabCombos','combos'], ['tabMedals','medals'], ['tabEvents','events']]) on(id, () => {
+      this.bookTab = tab; this.updateBook(); $('bookList').scrollTop = 0;
+    });
+    on('btnHaptic', () => { Store.d.haptics = !Store.d.haptics; Store.save(); this.syncSound(); buzz(20); });
+    for (const id of ['btnSound', 'btnSound2', 'btnSound3']) on(id, () => this.toggleMute());
+    for (const id of ['volMenu', 'volPause']) {
+      const el = $(id);
+      el.addEventListener('input', () => { AudioSys.ensure(); Store.d.vol = el.value / 100; if (Store.d.vol > 0 && Store.d.muted) Store.d.muted = false; AudioSys.applyVol(); this.syncSound(); });
+      el.addEventListener('change', () => { Store.save(); SFX.ui(); });
+    }
+    for (const id of ['musicMenu', 'musicPause']) $(id).addEventListener('change', () => {
+      AudioSys.ensure(); const value = $(id).value;
+      Store.d.musicTrack = value === 'auto' || SONGS[value] ? value : 'auto';
+      Store.save(); this.syncSound(); Music.play(desiredTrack());
+    });
+    // Language and sound live in settings and pause.
+    document.querySelectorAll('[data-picker]').forEach(box => {
+      box.innerHTML = ['th', 'en'].map(l => '<button class="flagBtn" data-lang="' + l + '" aria-label="' + (l === 'th' ? 'ภาษาไทย' : 'English') + '">' +
+        flagSVG(l) + '<span>' + (l === 'th' ? 'ไทย' : 'English') + '</span></button>').join('');
+    });
+    document.addEventListener('click', e => {
+      const b = e.target && e.target.closest && e.target.closest('.flagBtn'); if (!b) return;
+      e.stopPropagation(); e.preventDefault();
+      AudioSys.ensure(); SFX.ui(); buzz(8);
+      if (b.dataset.lang !== LANG) setLang(b.dataset.lang, true);
+    }, true);
+    document.addEventListener('pointerdown', () => AudioSys.ensure(), {capture:true, passive:true});
+    $('hapticSetting').classList.toggle('hidden', !HAPT);
+    this.syncSound(); this.storeNote();
+  },
+  toggleMute() { Store.d.muted = !Store.d.muted; if (!Store.d.muted && Store.d.vol < 0.05) Store.d.vol = 0.6; AudioSys.applyVol(); Store.save(); this.syncSound(); },
+  panelOpen() { return ['book', 'settings', 'modePicker'].some(id => !$(id).classList.contains('hidden')); },
+  syncMode() {
+    const mode = Store.d.mode, factor = Store.d.speedFactor;
+    for (const id of MODE_IDS) $('mode' + id[0].toUpperCase() + id.slice(1)).setAttribute('aria-pressed', String(mode === id));
+    for (const n of [1,2,3]) $('speed' + n).setAttribute('aria-pressed', String(n === factor));
+    $('speedChoices').classList.toggle('hidden', mode !== 'speed');
+    $('modeDescription').textContent = S(mode === 'speed' ? 'speedDesc' : mode === 'timed' ? 'timedDesc' : 'classicDesc');
+    $('modeBest').textContent = S('modeRecord', fmt(Store.d.modeBests[modeKey()] || 0));
+    $('btnMode').textContent = modeName(mode, factor) + ' ▾';
+  },
+  modeHud() {
+    const el = $('modeHud'), r = run;
+    el.classList.toggle('hidden', !r || r.mode === 'classic');
+    if (!r || r.mode === 'classic') return;
+    if (r.mode === 'speed') { el.textContent = 'SPEED ' + r.speedFactor + '×'; el.classList.remove('urgent'); }
+    else {
+      const left = Math.max(0, Math.ceil(180 - r.elapsed)), text = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
+      if (el.textContent !== text) el.textContent = text;
+      el.classList.toggle('urgent', left <= 15); el.setAttribute('aria-label', S('timeLeft', text));
+    }
+  },
+  syncSound() {
+    this.syncMode();
+    for (const id of ['musicMenu', 'musicPause']) {
+      const el = $(id);
+      if (el.dataset.lang !== LANG) {
+        el.innerHTML = '<option value="auto">' + esc(S('musicAuto')) + '</option>' + Object.entries(SONG_DEFS).map(([key, def]) =>
+          '<option value="' + key + '">' + esc(LANG === 'en' ? def.titleEn || def.title : def.title) + '</option>').join('');
+        el.dataset.lang = LANG;
+      }
+      el.value = Store.d.musicTrack;
+    }
+    for (const id of ['btnSound', 'btnSound2', 'btnSound3']) { $(id).innerHTML = Store.d.muted ? SVG_OFF : SVG_ON; $(id).setAttribute('aria-pressed', String(!Store.d.muted)); }
+    for (const id of ['volMenu', 'volPause']) $(id).value = Math.round((Store.d.muted ? 0 : Store.d.vol) * 100);
+    const hb = $('btnHaptic'); hb.innerHTML = Store.d.haptics ? SVG_VIB_ON : SVG_VIB_OFF; hb.setAttribute('aria-pressed', String(!!Store.d.haptics));
+    document.querySelectorAll('.flagBtn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === LANG)));
+  },
+  fitScore(id, minSize) {
+    const el = $(id);
+    let metrics = this.scoreMetrics[id];
+    if (!metrics) {
+      el.style.fontSize = '';
+      const available = el.clientWidth;
+      if (!available) return;
+      const css = getComputedStyle(el);
+      metrics = this.scoreMetrics[id] = {available, maxSize:parseFloat(css.fontSize), fontWeight:css.fontWeight, fontFamily:css.fontFamily, size:null};
+    }
+    const {available, maxSize, fontWeight, fontFamily} = metrics;
+    ctx.save(); ctx.font = fontWeight + ' ' + maxSize + 'px ' + fontFamily;
+    const width = textWidth(ctx, el.textContent);
+    ctx.restore();
+    const size = Math.max(minSize, Math.min(maxSize, Math.floor(maxSize * (available - 2) / Math.max(1, width))));
+    if (metrics.size !== size) { metrics.size = size; el.style.fontSize = size + 'px'; }
+  },
+  fitScores() { this.scoreMetrics = {}; this.fitScore('score', 14); this.fitScore('resScore', 18); },
+  storeNote() { $('storeNote').classList.toggle('hidden', Store.ok); },
+  show(name) {
+    const play = name === 'play' || name === 'pause';
+    for (const id of ['menu', 'results', 'pause']) $(id).classList.toggle('hidden', name !== id);
+    $('book').classList.add('hidden');
+    $('settings').classList.add('hidden'); $('modePicker').classList.add('hidden');
+    this.modeHud();
+    for (const id of ['hud', 'pad']) $(id).classList.toggle('off', !play);
+    if (!play) { $('evb').classList.add('off'); $('tut').classList.add('off'); Notif.hide(); }
+    if (name === 'menu') { Demo.reset(); this.updateBook(); }
+    this.cache = {};
+    this.syncSound();
+    layout();
+  },
+  tut(step, hide) {
+    const el = $('tut');
+    if (step < 0 || hide) { el.classList.add('off'); return; }
+    const s = TUT[step]; $('tutText').innerHTML = esc(tx(s.t)) + '<small>' + esc(tx(s.s)) + '</small>';
+    el.classList.toggle('hold', !!s.hold); el.classList.remove('off');
+  },
+  event(flash) {
+    const r = run, el = $('evb');
+    const ev = r && G.state === 'play' ? (r.pending ? r.pending.def : r.event ? r.event.def : null) : null;
+    if (!ev) { el.classList.add('off'); return; }
+    el.classList.remove('off'); el.classList.toggle('active', !r.pending);
+    $('evIco').innerHTML = EV_ICONS[ev.id];
+    $('evTitle').textContent = tx(ev.title);
+    $('evSub').textContent = r.pending ? S('evIn', r.pending.count) + tx(ev.sub) : tx(ev.act);
+    $('evCount').textContent = r.pending ? r.pending.count : r.event.left;
+    if (flash) { el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+  },
+  drawNext(force) { // mini box: colour, pattern, icon and relative width — readable at a glance
+    if (!run) return;
+    const type = run.queue[0]; if (!type) return;
+    if (!force && this.cache.next === type) return; this.cache.next = type;
+    const nc = $('nextCv'), c = nc.getContext('2d'), T = TYPES[type], r0 = Math.min(T.r, 8);
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, nc.width, nc.height);
+    c.scale(nc.width / 74, nc.height / 26);
+    const mw = Math.round(36 + (T.w - 98) / 62 * 30), mh = 20, x = (74 - mw) / 2 - 1, y = 2;
+    c.fillStyle = C.ink; rr(c, x + 2, y + 2, mw, mh, r0); c.fill();
+    c.fillStyle = T.fill; rr(c, x, y, mw, mh, r0); c.fill();
+    if (T.pat) { c.save(); rr(c, x, y, mw, mh, r0); c.clip(); c.translate(x, y); paintPat(c, T.pat, mw, mh); c.restore(); }
+    c.lineWidth = 2; c.strokeStyle = C.ink; rr(c, x + 1, y + 1, mw - 2, mh - 2, r0); c.stroke();
+    const bx = 36, by = y + mh / 2;
+    c.fillStyle = T.badge; c.beginPath(); c.arc(bx, by, 7.5, 0, 6.3); c.fill(); c.lineWidth = 1.6; c.stroke();
+    c.save(); c.translate(bx, by); drawIcon(c, T.ico, 11, T.icoCol, T.badge); c.restore();
+    $('nextName').textContent = tx(T.name);
+  },
+  batteryHit() { const el = $('battery'); el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); },
+  skipDenied() { const el = $('skipBox'); el.classList.remove('denied'); void el.offsetWidth; el.classList.add('denied'); },
+  pulseSkip() { const el = $('pips'); el.animate && el.animate([{transform:'scale(1.25)'}, {transform:'scale(1)'}], {duration:250}); },
+  toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(this.toastT); this.toastT = setTimeout(() => t.classList.remove('show'), 1900); },
+  updateBook() {
+    const n = COMBOS.filter(c => Store.d.disc[c.id]).length;
+    const medals = ACHIEVEMENTS.filter(a => Store.d.ach[a.id]).length;
+    $('menuBest').textContent = S('menuBest', fmt(Store.d.modeBests[modeKey()] || 0), n, COMBOS.length);
+    $('btnBook').innerHTML = esc(S('book')) + ' <span style="opacity:.7">' + n + '/' + COMBOS.length + ' · ' + medals + '/' + ACHIEVEMENTS.length + '</span>';
+    for (const [id, tab] of [['tabCombos','combos'], ['tabMedals','medals'], ['tabEvents','events']]) $(id).setAttribute('aria-pressed', String(this.bookTab === tab));
+    if (this.bookTab === 'medals') {
+      const metrics = achievementMetrics();
+      $('bookSummary').textContent = S('medalProgress', medals, ACHIEVEMENTS.length);
+      $('bookList').innerHTML = ACHIEVEMENTS.map(a => {
+        const got = !!Store.d.ach[a.id], value = got ? a.target : Math.min(a.target, metrics[a.metric] || 0);
+        return '<div class="bk' + (got ? ' earned' : ' lock') + '"><b>' + (got ? '✓ ' : '') + esc(tx(a.name)) + '</b>' + (a.extreme ? '<span class="extremeBadge">' + (LANG === 'th' ? 'สุดโหด' : 'EXTREME') + '</span>' : '') + '<small>' + esc(tx(a.desc)) +
+          '</small><div class="medalProgress"><progress max="' + a.target + '" value="' + value + '" aria-label="' + esc(tx(a.name)) + '"></progress><span>' + value + '/' + a.target + '</span></div></div>';
+      }).join('');
+      return;
+    }
+    if (this.bookTab === 'events') {
+      $('bookSummary').textContent = S('eventCollection', Object.keys(EVENTS).length);
+      $('bookList').innerHTML = Object.values(EVENTS).map(e => '<div class="bk"><b>' + esc(tx(e.title)) + '</b><small>' + esc(tx(e.sub)) +
+        '</small><small>' + (LANG === 'th' ? 'นาน ' + e.len + ' กล่อง' : e.len + ' boxes') + '</small></div>').join('');
+      return;
+    }
+    $('bookSummary').textContent = S('found', n, COMBOS.length);
+    $('bookList').innerHTML = COMBOS.map(c => {
+      const got = !!Store.d.disc[c.id];
+      const rec = c.seq.map(t => got ? '<span style="background:' + TYPES[t].fill + ';color:' + (t === 'rent' || t === 'work' ? C.paper : C.ink) + '">' + esc(tx(TYPES[t].name)) + '</span>' : '<span>?</span>').join(' + ');
+      return '<div class="bk' + (got ? '' : ' lock') + '"><b>' + (got ? esc(tx(c.name)) : esc(S('lockedName', c.seq.length))) + '</b><div class="rec">' + rec + '</div><small>' +
+        (got ? esc(tx(c.effect)) + ' — “' + esc(tx(c.joke)) + '”' : esc(S('hint') + tx(c.hint))) + '</small></div>';
+    }).join('');
+  },
+  showResults(d) {
+    this.lastResult = d;
+    this.show('results');
+    $('resHeadline').textContent = S(run.completedTimed ? 'timeUp' : 'boom');
+    $('resMode').textContent = modeName(run.mode, run.speedFactor);
+    $('resDetails').open = false;
+    $('resScore').textContent = fmt(d.score);
+    $('resBest').innerHTML = S('bestBlock', fmt(d.best));
+    $('resNew').classList.toggle('hidden', !d.isBest);
+    $('resCause').innerHTML = d.cause;
+    $('resTitle').textContent = d.title; $('resTitleSub').textContent = d.titleSub;
+    $('resStats').innerHTML = d.stats.map(s => '<div class="stat"><small>' + esc(s[0]) + '</small><b>' + esc(s[1]) + '</b></div>').join('');
+    const disc = COMBOS.filter(c => Store.d.disc[c.id]).length;
+    let chips = d.combos.map(id => '<span class="chip' + (d.newCombos.includes(id) ? ' new' : '') + '">' + esc(tx(COMBO_BY[id].name)) + '</span>').join('');
+    if (!d.combos.length) { const und = COMBOS.find(c => !Store.d.disc[c.id]); chips = '<span class="chip ghost">' + esc(S('noCombo') + (und ? S('tryHint', tx(und.hint)) : '')) + '</span>'; }
+    $('resCombos').innerHTML = chips + '<span class="chip ghost" style="margin-left:auto">' + esc(S('found', disc, COMBOS.length)) + '</span>';
+    $('resTip').textContent = d.tip;
+    const earned = run.stats.newAch.map(id => ACHIEVEMENTS.find(a => a.id === id)).filter(Boolean);
+    $('resAchievements').classList.toggle('hidden', earned.length === 0);
+    $('resAchievements').textContent = earned.length ? S('newMedals', earned.length) + ': ' + earned.slice(0,2).map(a => tx(a.name)).join(' · ') + (earned.length > 2 ? ' +' + (earned.length - 2) : '') : '';
+    $('results').querySelector('.wrap').scrollTop = 0;
+    this.fitScores();
+    const btn = $('btnRetry'); btn.disabled = true; setTimeout(() => { btn.disabled = false; }, 200);
+  },
+  tick(dt) {
+    if (!run || (G.state !== 'play' && G.state !== 'collapse')) return;
+    const r = run, cc = this.cache;
+    this.modeHud();
+    this.shownScore = r.score < this.shownScore ? r.score : lerp(this.shownScore, r.score, 1 - Math.exp(-dt * 17.26));
+    const ss = Math.round(this.shownScore + 0.49);
+    if (cc.score !== ss) { cc.score = ss; $('score').textContent = fmt(ss); this.fitScore('score', 14); }
+    const best = Math.max(modeBest(r), r.score);
+    if (cc.best !== best) { cc.best = best; $('bestHud').textContent = (r.score > modeBest(r) && modeBest(r) > 0 ? S('newBestHud') : S('best')) + ' ' + fmt(best); }
+    if (cc.bat !== r.battery) {
+      cc.bat = r.battery; const is = $('battery').children;
+      for (let i = 0; i < 3; i++) is[i].classList.toggle('on', i < r.battery);
+      $('battery').classList.toggle('low', r.battery <= 1); $('battery').setAttribute('aria-label', S('battery', r.battery));
+    }
+    if (cc.streak !== r.streak) {
+      const st = $('streak'); st.classList.toggle('off', r.streak < 2); st.textContent = '×' + r.streak; st.setAttribute('aria-label', S('combo', r.streak));
+      if (r.streak > (cc.streak || 0)) { st.classList.add('pop'); setTimeout(() => st.classList.remove('pop'), 120); }
+      cc.streak = r.streak;
+    }
+    const meter = Math.round(r.skipMeter / CFG.skipCost * 100);
+    if (cc.skips !== r.skips || cc.meter !== meter) {
+      cc.skips = r.skips; cc.meter = meter; const is = $('pips').children;
+      for (let i = 0; i < 3; i++) {
+        is[i].classList.toggle('on', i < r.skips);
+        is[i].style.background = i === r.skips && meter > 0 ? 'conic-gradient(#FF2DAA ' + meter + '%, transparent 0)' : '';
+      }
+    }
+    // active combo effects live in the control pad (boxes remaining), replacing the static tap hint
+    const fx = r.fx, fk = fx.ot + '|' + fx.qq + '|' + fx.viral + '|' + fx.jitter + '|' + fx.guard;
+    if (cc.fx !== fk) {
+      cc.fx = fk;
+      const FXC = {ot:[C.blue, C.paper], qq:[C.paper, C.ink], viral:[C.pink, C.ink], jitter:[C.pink, C.ink], guard:[C.acid, C.ink]}, names = S('fx');
+      let html = '';
+      for (const k of ['ot', 'qq', 'viral', 'jitter','guard']) if (fx[k] > 0) html += '<span class="fx" style="background:' + FXC[k][0] + ';color:' + FXC[k][1] + '"><b>' + names[k] + '</b><i>' + fx[k] + '</i></span>';
+      $('fxRow').innerHTML = html;
+    }
+    const risk = G.state === 'play' && !G.paused && r.an.maxRisk > 0.65;
+    const guidance = fk + '|' + (risk ? r.an.maxIdx + ':' + r.an.maxDir : 'safe');
+    if (cc.guidance !== guidance) {
+      cc.guidance = guidance;
+      $('riskHint').classList.toggle('hidden', !risk);
+      $('fxRow').classList.toggle('hidden', risk);
+      $('tapHint').classList.toggle('hidden', risk || !!(fx.ot || fx.qq || fx.viral || fx.jitter || fx.guard));
+      if (risk) {
+        $('riskText').textContent = S('weakFloor', r.an.maxIdx, S(r.an.maxDir > 0 ? 'right' : 'left'));
+        if (Notif.cur && Notif.cur.prio < 3) Notif.hide();
+      }
+    }
+    const holding = Input.progress() > 0;
+    if (cc.holding !== holding) { cc.holding = holding; $('skipBox').classList.toggle('holding', holding); }
+    this.drawNext();
+  },
+};
+
+/* ---------- 10. MAIN LOOP & LIFECYCLE ---------- */
+function compactFX(list, alive) {
+  let n = 0;
+  for (let i = 0; i < list.length; i++) if (alive(list[i])) list[n++] = list[i];
+  list.length = n;
+}
+const partAlive = p => p.life < p.max;
+const debrisAlive = d => d.life < 4.5 && d.y < 3000;
+const floaterAlive = f => f.life < f.max;
+function updateFX(dt) {
+  G.shake = Math.max(0, G.shake - dt * 40);
+  G.flash = Math.max(0, G.flash - dt * 1.6);
+  G.slow = Math.max(0, G.slow - dt);
+  G.qqFx = run && run.fx.qq > 0 ? Math.min(1, G.qqFx + dt * 3) : Math.max(0, G.qqFx - dt * 2);
+  if (G.gold > 0) {
+    G.gold -= dt;
+    // Same confetti rate at 60/120 Hz; no doubling of particles on ProMotion screens.
+    G.goldCarry = (G.goldCarry || 0) + dt * 54;
+    const count = Math.floor(G.goldCarry); G.goldCarry -= count;
+    for (let i = 0; i < count; i++) G.parts.push({screen:true, x:rand(0, L.W), y:-10, vx:rand(-30, 30), vy:rand(160, 320), g:120, life:0, max:rand(1.6, 2.6), size:rand(6, 11), col:Math.random() < 0.7 ? C.gold : C.acid, shape:Math.random() < 0.55 ? 'coin' : 'tri', a:0, va:rand(-4, 4)});
+  }
+  for (const p of G.parts) { p.life += dt; p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.a += p.va * dt; }
+  compactFX(G.parts, partAlive);
+  if (G.parts.length > 400) G.parts.splice(0, G.parts.length - 400);
+  for (const d of G.debris) {
+    d.life += dt; d.vy += 2100 * dt; d.x += d.vx * dt; d.y += d.vy * dt; d.a += d.va * dt;
+    if (!d.yeet && d.y + d.h / 2 > 0 && d.vy > 0 && Math.abs(d.x) < L.W) { d.y = -d.h / 2; d.vy *= -0.32; d.vx *= 0.6; d.va *= 0.5; if (Math.abs(d.vy) < 60) d.vy = 0; }
+  }
+  compactFX(G.debris, debrisAlive);
+  for (const f of G.floaters) { f.life += dt; f.y -= 46 * dt; }
+  compactFX(G.floaters, floaterAlive);
+  if (G.banner) { G.banner.t += dt; if (G.banner.t > G.banner.dur) G.banner = null; }
+}
+function updateWorld(dt) {
+  const r = run;
+  for (let j = 1; j < r.blocks.length; j++) {
+    const f = r.ifaces[j]; if (!f) continue;
+    const acc = -170 * (r.ang[j] - f.target) - 13 * r.angV[j];
+    r.angV[j] += acc * dt; r.ang[j] += r.angV[j] * dt;
+    const b = r.blocks[j]; if (b.sq) b.sq = Math.max(0, b.sq - dt * 2.2); if (b.flash) b.flash = Math.max(0, b.flash - dt * 4);
+  }
+  const desired = Math.max(0, topY() - (L.groundY - L.targetTopY));
+  r.camY = lerp(r.camY, desired, 1 - Math.exp(-dt * 5));
+  // follow a drifting tower sideways (part-way) so the top never leaves a narrow phone screen
+  const tx0 = clamp(topBlock().x * 0.6, -L.frameW * 0.3, L.frameW * 0.3);
+  r.camX = lerp(r.camX, tx0, 1 - Math.exp(-dt * 3));
+}
+function frame(dt, elapsedDt = dt) {
+  if (run && G.state === 'play' && !G.paused && run.mode === 'timed') {
+    run.elapsed = Math.min(180, run.elapsed + Math.max(0, elapsedDt));
+    if (run.elapsed >= 180) {
+      Input.reset(); run.cur = null; G.spawnIn = 0; run.completedTimed = true; run.cause = {kind:'time'};
+      UI.tut(-1); UI.event(); Notif.hide(); finishRun();
+    }
+  }
+  G.time += dt;
+  Input.update();
+  if (G.state === 'menu') Demo.update(dt);
+  else if (run && !G.paused) {
+    const wdt = G.slow > 0 && G.state === 'collapse' ? dt * 0.35 : dt;
+    if (G.state === 'play') updatePlay(wdt);
+    if (G.state === 'collapse') { G.collapseT += dt; if (G.collapseT >= CFG.collapseTime) finishRun(); }
+    updateWorld(wdt);
+    updateFX(wdt);
+  }
+  Music.play(desiredTrack());
+  UI.tick(dt);
+}
+let lastT = performance.now(), booted = false;
+function loop(ts) {
+  const elapsedDt = Math.max(0, (ts - lastT) / 1000), dt = Math.min(0.05, elapsedDt); lastT = ts;
+  if (document.hidden) { requestAnimationFrame(loop); return; }
+  try {
+    frame(dt, elapsedDt); G.lastUpdate = ts; render();
+    if (!booted) { $('launchFallback').classList.add('hidden'); booted = true; }
+  } catch (e) { console.error(e); }
+  requestAnimationFrame(loop);
+}
+function onHidden() { if (G.state === 'play' && !G.paused) pauseGame(); else if (G.state === 'collapse') checkpointRun(); Input.reset(); AudioSys.suspend(); }
+document.addEventListener('visibilitychange', () => { if (document.hidden) onHidden(); else { AudioSys.resume(); lastT = performance.now(); } });
+window.addEventListener('pagehide', onHidden);
+window.addEventListener('blur', () => { if (G.state === 'play' && !G.paused) pauseGame(); Input.cancel(); });
+let rsT = 0;
+const onResize = () => {
+  clearTimeout(rsT);
+  if (window.matchMedia('(orientation: landscape) and (max-height: 500px)').matches) pauseGame();
+  layout(); rsT = setTimeout(layout, 120);
+};
+window.addEventListener('resize', onResize);
+window.addEventListener('orientationchange', onResize);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', onResize);
+
+Store.load();
+checkAchievements(true);
+G.reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+UI.init();
+setLang(detectLang(), false);
+UI.show('menu');
+requestAnimationFrame(t => { lastT = t; loop(t); });
+
+/* debug / test hook (harmless in production) */
+window.__PJP = {G, get run() { return run; }, get lang() { return LANG; }, Music, AudioSys, SFX, Store, SONGS, COMBOS, EVENTS, spriteCache, Input, Game, Notif,
+  layout, startRun, toMenu, goMenu, pauseGame, resumeGame, setLang, resolveDrop:(b, x) => resolveDrop(b, x), wouldTopple:(x, m) => wouldTopple(x, m),
+  topVisual:() => run ? topVisual() : null, range:w => travelRange(w), inv:(x, y) => inv(x, y, run.blocks.length - 1), landingX:b => landingX(b),
+  speed:() => speed(), tolerance:() => tolerance(run.cur)};
+})();
+</script>
+</body>
+</html>
